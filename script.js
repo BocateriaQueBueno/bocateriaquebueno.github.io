@@ -2,7 +2,7 @@
 const SUPABASE_URL = 'https://qcwrccquctttqniketby.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjd3JjY3F1Y3R0dHFuaWtldGJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjgzOTIsImV4cCI6MjA5MzAwNDM5Mn0.R_tLtoaPRczxD1LVvArq2HFHzer1jWeOpJK_o9hPDr0';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // State
 let menuItems = [];
@@ -22,23 +22,23 @@ const checkoutBtn = document.getElementById('checkout-btn');
 
 // Initialization
 async function init() {
-    if (window.location.pathname.includes('order.html')) {
+    if (menuGrid) {
         await loadMenu();
         renderMenu();
-        updateCartUI();
         setupFilters();
     }
+    updateCartUI();
 }
 
 // Data Fetching
 async function loadMenu() {
     try {
-        const { data: bocadillos, error: bError } = await supabase
+        const { data: bocadillos, error: bError } = await supabaseClient
             .from('bocadillo')
             .select('*')
             .order('numero_menu', { ascending: true });
 
-        const { data: productos, error: pError } = await supabase
+        const { data: productos, error: pError } = await supabaseClient
             .from('producto')
             .select('*');
 
@@ -51,7 +51,8 @@ async function loadMenu() {
             name: b.nombre,
             number: b.numero_menu,
             ingredients: b.num_ingredientes,
-            price: b.precio_caliente, // Defaulting to caliente
+            price_caliente: Number(b.precio_caliente),
+            price_frio: b.precio_frio ? Number(b.precio_frio) : null,
             category: getBocadilloCategory(b.num_ingredientes)
         }));
 
@@ -59,7 +60,8 @@ async function loadMenu() {
             id: p.id_producto,
             type: 'producto',
             name: p.nombre,
-            price: p.precio,
+            price_caliente: Number(p.precio),
+            price_frio: null,
             category: 'extras'
         }));
 
@@ -85,29 +87,58 @@ function renderMenu() {
         ? menuItems 
         : menuItems.filter(item => item.category === currentFilter);
 
-    menuGrid.innerHTML = filtered.map(item => `
-        <div class="bocadillo-card" data-id="${item.id}" data-type="${item.type}">
-            <div class="bocadillo-number">${item.number || ''}</div>
-            <h3>${item.name}</h3>
-            <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="price-tag">${item.price.toFixed(2)}€</div>
-                <button class="order-btn" onclick="addToCart('${item.type}', ${item.id})">Añadir</button>
+    menuGrid.innerHTML = filtered.map(item => {
+        let priceHTML = '';
+        if (item.price_frio) {
+            priceHTML = `
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f7ff; padding: 8px 12px; border-radius: 8px;">
+                        <span>❄️ ${item.price_frio.toFixed(2)}€</span>
+                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px;" onclick="addToCart(event, '${item.type}', ${item.id}, 'frio')">Añadir</button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #fff0f0; padding: 8px 12px; border-radius: 8px;">
+                        <span>♨️ ${item.price_caliente.toFixed(2)}€</span>
+                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            priceHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="price-tag">${item.price_caliente.toFixed(2)}€</div>
+                    <button class="order-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="bocadillo-card" data-id="${item.id}" data-type="${item.type}">
+                <div class="bocadillo-number">${item.number || ''}</div>
+                <h3>${item.name}</h3>
+                <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
+                ${priceHTML}
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Cart Logic
-window.addToCart = function(type, id) {
+window.addToCart = function(event, type, id, temp = 'caliente') {
     const item = menuItems.find(i => i.type === type && i.id === id);
     if (!item) return;
 
-    const existing = cart.find(c => c.type === type && c.id === id);
+    const price = temp === 'frio' ? item.price_frio : item.price_caliente;
+    const existing = cart.find(c => c.type === type && c.id === id && c.temp === temp);
+    
     if (existing) {
         existing.quantity++;
     } else {
-        cart.push({ ...item, quantity: 1 });
+        cart.push({ 
+            ...item, 
+            price: price, 
+            temp: temp, 
+            quantity: 1 
+        });
     }
 
     saveCart();
@@ -149,7 +180,7 @@ function updateCartUI() {
         cartItemsList.innerHTML = cart.map((item, index) => `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
                 <div>
-                    <div style="font-weight: 600;">${item.name}</div>
+                    <div style="font-weight: 600;">${item.name} ${item.temp === 'frio' ? '❄️' : '♨️'}</div>
                     <div style="font-size: 0.8rem; color: #666;">${item.quantity} x ${item.price.toFixed(2)}€</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
