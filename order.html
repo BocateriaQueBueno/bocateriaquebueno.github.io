@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestra Carta - Bocatería Qué Bueno</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="logoquebueno.jpeg">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                <img src="logoquebueno.jpeg" alt="Logo Qué Bueno" class="logo-img">
+                <div class="brand-name">Qué Bueno</div>
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="order.html" class="active">Carta</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="menu-container">
+        <div class="section-title">
+            <h2>Nuestra Carta</h2>
+            <p>Elige entre nuestra gran variedad de bocadillos y complementos.</p>
+        </div>
+
+        <div class="filter-bar" id="category-filters">
+            <button class="filter-btn active" data-category="all">Todos</button>
+            <button class="filter-btn" data-category="1">1 Ingrediente</button>
+            <button class="filter-btn" data-category="2">2 Ingredientes</button>
+            <button class="filter-btn" data-category="3">3 Ingredientes</button>
+            <button class="filter-btn" data-category="4+">Especiales</button>
+            <button class="filter-btn" data-category="extras">Extras</button>
+        </div>
+
+        <div class="bocadillos-grid" id="menu-grid">
+            <!-- Items will be loaded here via JS -->
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <p>Cargando el menú de hoy...</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="cart-float" id="cart-toggle">
+        🛒
+        <div class="cart-count" id="cart-count">0</div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tu Pedido</h2>
+                <span class="close-modal" id="close-modal">&times;</span>
+            </div>
+            <div id="cart-items-list" style="margin-bottom: 30px;">
+                <!-- Cart items here -->
+                <p style="text-align: center; opacity: 0.5;">Tu carrito está vacío.</p>
+            </div>
+            <div id="cart-summary" style="border-top: 2px solid #eee; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 800; margin-bottom: 20px;">
+                    <span>Total:</span>
+                    <span id="cart-total">0.00€</span>
+                </div>
+                <button class="cta-button" style="width: 100%; border: none; cursor: pointer;" id="checkout-btn">Confirmar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Bocatería Qué Bueno</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
