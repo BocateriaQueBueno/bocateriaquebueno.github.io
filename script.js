@@ -222,12 +222,64 @@ if (checkoutBtn) {
     checkoutBtn.onclick = async () => {
         if (cart.length === 0) return alert('El carrito está vacío');
         
-        // Simplified checkout for demo
-        alert('¡Gracias por tu pedido! (Simulación de pedido enviada a Supabase)');
-        cart = [];
-        saveCart();
-        updateCartUI();
-        cartModal.style.display = 'none';
+        checkoutBtn.disabled = true;
+        checkoutBtn.innerText = 'Procesando...';
+
+        try {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            // 1. Insert into pedido
+            const { data: pedidoData, error: pedidoError } = await supabaseClient
+                .from('pedido')
+                .insert([{
+                    tipo: 'para_llevar',
+                    total: total,
+                    metodo_pago: 'en_tienda'
+                }])
+                .select();
+                
+            if (pedidoError) throw pedidoError;
+            
+            const idPedido = pedidoData[0].id_pedido;
+            
+            // 2. Insert into linea_pedido
+            const lineas = cart.map(item => {
+                const linea = {
+                    id_pedido: idPedido,
+                    tipo_item: item.type,
+                    cantidad: item.quantity,
+                    precio_unitario: item.price,
+                    subtotal: item.price * item.quantity
+                };
+                
+                if (item.type === 'bocadillo') {
+                    linea.id_bocadillo = item.id;
+                    linea.temperatura = item.temp;
+                } else {
+                    linea.id_producto = item.id;
+                }
+                
+                return linea;
+            });
+            
+            const { error: lineasError } = await supabaseClient
+                .from('linea_pedido')
+                .insert(lineas);
+                
+            if (lineasError) throw lineasError;
+            
+            alert('¡Gracias por tu pedido! Te esperamos en la tienda para recogerlo y realizar el pago.');
+            cart = [];
+            saveCart();
+            updateCartUI();
+            cartModal.style.display = 'none';
+        } catch (error) {
+            console.error('Error procesando el pedido:', error);
+            alert('Hubo un error al procesar tu pedido. Por favor, inténtalo de nuevo.');
+        } finally {
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerText = 'Confirmar Pedido (Pago en Tienda)';
+        }
     };
 }
 
