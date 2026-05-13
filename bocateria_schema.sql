@@ -31,11 +31,14 @@ CREATE TABLE cliente (
     id_cliente     INT          NOT NULL AUTO_INCREMENT,
     nombre         VARCHAR(100) NOT NULL,
     telefono       VARCHAR(15)  NOT NULL,
+    email          VARCHAR(150) NOT NULL,
     contrasena     VARCHAR(255),               -- hash bcrypt/argon2, nunca texto plano
     es_registrado  BOOLEAN      NOT NULL DEFAULT FALSE,
+    email_verificado BOOLEAN    NOT NULL DEFAULT FALSE,
     fecha_registro DATETIME,
     PRIMARY KEY (id_cliente),
     UNIQUE KEY uq_cliente_telefono (telefono),
+    UNIQUE KEY uq_cliente_email (email),
     CONSTRAINT chk_cliente_registro CHECK (
         es_registrado = FALSE
         OR (es_registrado = TRUE AND contrasena IS NOT NULL AND fecha_registro IS NOT NULL)

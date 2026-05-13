@@ -41,6 +41,7 @@ let menuItems = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentFilter = 'all';
 let currentPage = 1;
+let currentUser = null;
 const ITEMS_PER_PAGE = 12;
 
 // Normalización inmediata de datos antiguos
@@ -70,6 +71,7 @@ async function init() {
         renderMenu();
         setupFilters();
     }
+    setupAuth();
     updateCartUI();
 }
 
@@ -355,7 +357,7 @@ function updateCartUI() {
                 extrasHTML = `
                     <div style="margin-top: 8px;">
                         <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                            <label style="font-size: 0.75rem; background: ${item.pan_obrador ? '#ffb703' : '#f0f0f0'}; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                            <label style="font-size: 0.75rem; background: ${item.pan_obrador ? 'var(--accent)' : 'rgba(255,255,255,0.05)'}; color: ${item.pan_obrador ? '#000' : '#fff'}; padding: 4px 8px; border-radius: 4px; cursor: pointer; border: 1px solid ${item.pan_obrador ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}; display: inline-flex; align-items: center; gap: 5px;">
                                 <input type="checkbox" style="display: none;" onchange="togglePanObrador(${index})" ${item.pan_obrador ? 'checked' : ''}>
                                 🥖 Pan Obrador (+0.30€)
                             </label>
@@ -447,6 +449,17 @@ if (checkoutBtn) {
                 return null;
             }).filter(n => n !== null).join(' | ');
 
+            // Obtener el ID del cliente si está logueado
+            let idCliente = null;
+            if (currentUser) {
+                const { data: cData } = await supabaseClient
+                    .from('cliente')
+                    .select('id_cliente')
+                    .eq('email', currentUser.email)
+                    .single();
+                if (cData) idCliente = cData.id_cliente;
+            }
+
             // 1. Insert into pedido
             const { data: pedidoData, error: pedidoError } = await supabaseClient
                 .from('pedido')
@@ -455,7 +468,8 @@ if (checkoutBtn) {
                     total: total,
                     metodo_pago: 'en_tienda',
                     notas: notasExtras || 'Sin extras especiales',
-                    hora_recogida: pickupTime
+                    hora_recogida: pickupTime,
+                    id_cliente: idCliente
                 }])
                 .select();
                 
@@ -514,6 +528,217 @@ if (checkoutBtn) {
 
 // Run init
 init();
+
+// Auth Logic
+function setupAuth() {
+    const authModal = document.getElementById('auth-modal');
+    const openAuthBtn = document.getElementById('open-auth-modal');
+    const closeAuthBtn = document.getElementById('close-auth-modal');
+    const toggleToRegister = document.getElementById('toggle-to-register');
+    const toggleToLogin = document.getElementById('toggle-to-login');
+    const toggleToReset = document.getElementById('toggle-to-reset');
+    const backToLogin = document.getElementById('back-to-login');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const resetForm = document.getElementById('reset-password-form');
+    const authTitle = document.getElementById('auth-title');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    if (!authModal) return;
+
+    // Toggle Modal
+    openAuthBtn.onclick = () => authModal.style.display = 'flex';
+    if (closeAuthBtn) closeAuthBtn.onclick = () => authModal.style.display = 'none';
+    
+    const closeAuthModalSpan = document.getElementById('close-auth-modal');
+    if (closeAuthModalSpan) closeAuthModalSpan.onclick = () => authModal.style.display = 'none';
+
+    window.addEventListener('click', (e) => {
+        if (e.target === authModal) authModal.style.display = 'none';
+    });
+
+    // Toggle Forms
+    if (toggleToRegister) {
+        toggleToRegister.onclick = (e) => {
+            e.preventDefault();
+            loginForm.style.display = 'none';
+            resetForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            authTitle.innerText = 'Crear Cuenta';
+        };
+    }
+
+    if (toggleToLogin) {
+        toggleToLogin.onclick = (e) => {
+            e.preventDefault();
+            registerForm.style.display = 'none';
+            resetForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            authTitle.innerText = 'Iniciar Sesión';
+        };
+    }
+
+    if (toggleToReset) {
+        toggleToReset.onclick = (e) => {
+            e.preventDefault();
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            resetForm.style.display = 'block';
+            authTitle.innerText = 'Recuperar Contraseña';
+        };
+    }
+
+    if (backToLogin) {
+        backToLogin.onclick = (e) => {
+            e.preventDefault();
+            resetForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            authTitle.innerText = 'Iniciar Sesión';
+        };
+    }
+
+    // Sign Up
+    if (registerForm) {
+        registerForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: name, phone: phone }
+                }
+            });
+
+            if (error) {
+                alert('Error en el registro: ' + error.message);
+            } else {
+                // Guardar en nuestra tabla publica de clientes
+                const { error: dbError } = await supabaseClient
+                    .from('cliente')
+                    .insert([{
+                        nombre: name,
+                        telefono: phone,
+                        email: email,
+                        es_registrado: true,
+                        fecha_registro: new Date().toISOString()
+                    }]);
+                
+                if (dbError) console.error('Error syncing to public.cliente:', dbError);
+
+                alert('¡Registro iniciado! Por favor, revisa tu correo electrónico para verificar tu cuenta antes de entrar.');
+                authModal.style.display = 'none';
+            }
+        };
+    }
+
+    // Sign In
+    if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                alert('Error al entrar: ' + error.message);
+            } else {
+                authModal.style.display = 'none';
+                loginForm.reset();
+            }
+        };
+    }
+
+    // Reset Password
+    if (resetForm) {
+        resetForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+            
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/index.html',
+            });
+
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                alert('¡Enlace enviado! Revisa tu correo electrónico para restablecer tu contraseña.');
+                resetForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                authTitle.innerText = 'Iniciar Sesión';
+            }
+        };
+    }
+
+    // Sign Out
+    if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+            await supabaseClient.auth.signOut();
+        };
+    }
+
+    // Listen for Auth Changes
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        updateAuthUI();
+    });
+}
+
+function updateAuthUI() {
+    const authNav = document.getElementById('auth-nav-item');
+    const userNav = document.getElementById('user-nav-item');
+    const userNameDisplay = document.getElementById('user-name-display');
+
+    if (!authNav || !userNav) return;
+
+    if (currentUser) {
+        authNav.style.display = 'none';
+        userNav.style.display = 'flex';
+        userNav.style.alignItems = 'center';
+        
+        // Verificar si es admin para mostrar el link al panel
+        checkAdminStatus();
+
+        userNameDisplay.innerText = `Hola, ${currentUser.user_metadata.full_name || currentUser.email.split('@')[0]}`;
+    } else {
+        authNav.style.display = 'block';
+        userNav.style.display = 'none';
+        
+        // Quitar link de admin si existe
+        const adminLink = document.getElementById('admin-nav-link');
+        if (adminLink) adminLink.remove();
+    }
+}
+
+async function checkAdminStatus() {
+    if (!currentUser) return;
+    
+    const { data: profile } = await supabaseClient
+        .from('cliente')
+        .select('es_admin')
+        .eq('email', currentUser.email)
+        .single();
+    
+    if (profile && profile.es_admin) {
+        // Añadir link al panel si no existe
+        if (!document.getElementById('admin-nav-link')) {
+            const navUl = document.querySelector('nav ul');
+            const li = document.createElement('li');
+            li.id = 'admin-nav-link';
+            li.innerHTML = `<a href="admin.html" style="color: var(--accent); font-weight: 900; border: 1px solid var(--accent); padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; margin-left: 10px;">PANEL ADMIN</a>`;
+            navUl.insertBefore(li, document.getElementById('user-nav-item'));
+        }
+    }
+}
 
 // Intro Animation Logic
 document.addEventListener('DOMContentLoaded', () => {

@@ -2,20 +2,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
 :root {
-    --primary: #ff00ff; /* Electric Magenta */
-    --primary-dark: #cc00cc;
-    --secondary: #00ffff; /* Electric Cyan */
-    --accent: #d4ff00; /* Neon Lime */
+    --primary: #ff007f; /* Vibrant Neon Pink */
+    --primary-dark: #cc0066;
+    --secondary: #00e5ff; /* Electric Cyan */
+    --accent: #ccff00; /* Neon Lime/Yellow */
     --text: #ffffff;
-    --text-light: #b0b0b0;
-    --bg: #050505;
-    --card-bg: #111111;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    --neon-glow: 0 0 15px rgba(255, 0, 127, 0.4);
-    --radius: 12px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --text-light: #d0d0d0;
+    --bg: #0a0a0a;
+    --card-bg: #121212;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+    --neon-glow: 0 0 20px rgba(255, 0, 127, 0.5);
+    --radius: 8px;
+    --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 * {
@@ -42,28 +42,32 @@ main {
     flex: 1;
 }
 
-/* Splat Drawings */
+/* Splat Drawings - High Impact Spray Style */
 .splat {
     position: absolute;
     pointer-events: none;
     z-index: 1;
-    opacity: 0.6;
+    opacity: 0.7;
     background-size: contain;
     background-repeat: no-repeat;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
 }
 
 .splat-pink {
-    /* Basada en la mancha morada con drips */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,15 C65,15 75,25 75,40 C75,55 70,60 70,75 C70,85 65,95 62,95 C59,95 58,85 58,75 C58,65 52,65 52,75 C52,85 50,95 47,95 C44,95 42,85 42,75 C42,60 35,55 35,40 C35,25 40,15 50,15' fill='%23ff00ff'/%3E%3Ccircle cx='60' cy='30' r='8' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='55' cy='45' r='5' fill='rgba(255,255,255,0.2)'/%3E%3Ccircle cx='80' cy='40' r='2' fill='%23ff00ff'/%3E%3Ccircle cx='20' cy='50' r='3' fill='%23ff00ff'/%3E%3Ccircle cx='70' cy='20' r='2' fill='%23ff00ff'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,15 C65,15 80,30 80,45 C80,60 70,70 70,85 C70,95 62,98 58,90 C55,80 52,80 48,90 C45,98 35,95 35,80 C35,65 25,55 25,40 C25,25 35,15 50,15' fill='%23ff007f'/%3E%3Cpath d='M42,85 L42,95 M58,80 L58,98 M72,70 L72,92' stroke='%23ff007f' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='30' r='1.5' fill='%23ff007f'/%3E%3Ccircle cx='85' cy='25' r='1' fill='%23ff007f'/%3E%3Ccircle cx='15' cy='60' r='2' fill='%23ff007f'/%3E%3Ccircle cx='90' cy='70' r='1.5' fill='%23ff007f'/%3E%3Ccircle cx='50' cy='5' r='1' fill='%23ff007f'/%3E%3Ccircle cx='10' cy='15' r='0.8' fill='%23ff007f'/%3E%3Ccircle cx='95' cy='90' r='1.2' fill='%23ff007f'/%3E%3Ccircle cx='30' cy='10' r='1' fill='%23ff007f'/%3E%3Ccircle cx='70' cy='15' r='0.5' fill='%23ff007f'/%3E%3Ccircle cx='80' cy='50' r='0.7' fill='%23ff007f'/%3E%3Ccircle cx='25' cy='80' r='1' fill='%23ff007f'/%3E%3C/svg%3E");
 }
 
 .splat-blue {
-    /* Basada en la mancha verde con salpicaduras */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,20 C65,10 85,25 75,45 C85,55 95,75 75,80 C65,85 45,95 30,80 C15,75 5,55 15,40 C5,25 25,10 40,20 L50,20' fill='%2300ffff'/%3E%3Ccircle cx='45' cy='40' r='8' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='70' cy='20' r='3' fill='%2300ffff'/%3E%3Ccircle cx='85' cy='40' r='4' fill='%2300ffff'/%3E%3Ccircle cx='20' cy='70' r='5' fill='%2300ffff'/%3E%3Ccircle cx='30' cy='15' r='2' fill='%2300ffff'/%3E%3Ccircle cx='50' cy='85' r='3' fill='%2300ffff'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,25 C70,15 90,30 85,55 C95,70 80,90 60,85 C40,95 15,85 20,60 C5,45 25,15 50,25' fill='%2300e5ff'/%3E%3Ccircle cx='15' cy='20' r='2' fill='%2300e5ff'/%3E%3Ccircle cx='85' cy='15' r='1.5' fill='%2300e5ff'/%3E%3Ccircle cx='95' cy='55' r='2' fill='%2300e5ff'/%3E%3Ccircle cx='5' cy='70' r='1' fill='%2300e5ff'/%3E%3Ccircle cx='40' cy='5' r='1.5' fill='%2300e5ff'/%3E%3Ccircle cx='75' cy='95' r='1.2' fill='%2300e5ff'/%3E%3Ccircle cx='20' cy='90' r='0.8' fill='%2300e5ff'/%3E%3Ccircle cx='10' cy='40' r='0.5' fill='%2300e5ff'/%3E%3Ccircle cx='90' cy='30' r='0.7' fill='%2300e5ff'/%3E%3C/svg%3E");
 }
 
-.splat-lime {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,20 C65,10 85,25 75,45 C85,55 95,75 75,80 C65,85 45,95 30,80 C15,75 5,55 15,40 C5,25 25,10 40,20 L50,20' fill='%23d4ff00'/%3E%3Ccircle cx='45' cy='40' r='8' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='70' cy='20' r='3' fill='%23d4ff00'/%3E%3Ccircle cx='85' cy='40' r='4' fill='%23d4ff00'/%3E%3C/svg%3E");
+.splat-yellow {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50,20 L60,35 L80,30 L70,50 L90,65 L65,70 L60,90 L45,70 L20,80 L35,55 L10,40 L40,35 Z' fill='%23ccff00'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ccff00'/%3E%3Ccircle cx='90' cy='15' r='1.5' fill='%23ccff00'/%3E%3Ccircle cx='85' cy='85' r='2' fill='%23ccff00'/%3E%3Ccircle cx='15' cy='90' r='1' fill='%23ccff00'/%3E%3Ccircle cx='50' cy='5' r='1' fill='%23ccff00'/%3E%3C/svg%3E");
+}
+
+.splat-dark {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10,10 H90 V90 H10 Z' fill='%23000'/%3E%3Cpath d='M5,5 Q10,15 15,5 T25,15 T35,5 T45,15 T55,5 T65,15 T75,5 T85,15 T95,5' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E");
+    opacity: 0.9;
 }
 
 .card-splat {
@@ -128,12 +132,40 @@ nav ul {
 nav a {
     text-decoration: none;
     color: var(--text);
-    font-weight: 600;
+    font-weight: 700;
     transition: var(--transition);
+    position: relative;
+    padding: 5px 0;
 }
 
-nav a:hover {
+nav a.nav-home:hover, nav a.nav-home.active {
+    color: var(--secondary);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+
+nav a.nav-menu:hover, nav a.nav-menu.active {
     color: var(--primary);
+    text-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+}
+
+nav a.nav-contact:hover {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    transition: width 0.3s ease;
+}
+
+nav a:hover::after {
+    width: 100%;
 }
 
 /* Hero Section */

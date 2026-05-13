@@ -15,9 +15,11 @@
 
 <body>
     <!-- Manchas de Graffiti detrás del contenido -->
-    <div class="splat splat-pink" style="top: 15%; left: -5%; width: 450px; height: 450px; opacity: 0.4; z-index: -1;"></div>
-    <div class="splat splat-blue" style="top: 50%; right: -5%; width: 500px; height: 500px; opacity: 0.4; z-index: -1;"></div>
-    <div class="splat splat-pink" style="bottom: 10%; left: 10%; width: 400px; height: 400px; opacity: 0.3; z-index: -1;"></div>
+    <div class="splat splat-pink" style="top: 5%; left: -5%; width: 600px; height: 600px; opacity: 0.5; z-index: -1; transform: rotate(-15deg);"></div>
+    <div class="splat splat-blue" style="top: 35%; right: -10%; width: 550px; height: 550px; opacity: 0.5; z-index: -1; transform: rotate(10deg);"></div>
+    <div class="splat splat-yellow" style="top: 65%; left: -5%; width: 450px; height: 450px; opacity: 0.4; z-index: -1; transform: rotate(5deg);"></div>
+    <div class="splat splat-pink" style="bottom: 5%; right: 5%; width: 400px; height: 400px; opacity: 0.3; z-index: -1;"></div>
+    <div class="splat splat-dark" style="top: 20%; left: 50%; width: 100%; height: 200px; opacity: 0.1; z-index: -2; transform: translateX(-50%) skewY(-2deg);"></div>
 
     <header>
         <div class="logo-container">
@@ -27,9 +29,14 @@
         <nav>
 
             <ul>
-                <li><a href="index.html">Inicio</a></li>
-                <li><a href="order.html">Carta</a></li>
-                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="index.html" class="nav-home">Inicio</a></li>
+                <li><a href="order.html" class="nav-menu">Carta</a></li>
+                <li><a href="#contacto" class="nav-contact">Contacto</a></li>
+                <li id="auth-nav-item"><button id="open-auth-modal" class="filter-btn" style="padding: 5px 15px; font-size: 0.8rem; margin-left: 10px;">Acceso</button></li>
+                <li id="user-nav-item" style="display: none;">
+                    <span id="user-name-display" style="font-size: 0.8rem; color: var(--secondary); font-weight: 700;"></span>
+                    <button id="logout-btn" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; margin-left: 5px;"><i class="fas fa-sign-out-alt"></i></button>
+                </li>
             </ul>
         </nav>
     </header>
@@ -83,6 +90,64 @@
             <p style="margin-top: 20px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
         </div>
     </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content" style="max-width: 400px; position: relative; border-color: var(--secondary); box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);">
+            <div class="modal-header">
+                <h2 id="auth-title" style="font-family: 'Permanent Marker', cursive; color: var(--secondary);">Iniciar Sesión</h2>
+                <span class="close-modal" id="close-auth-modal">&times;</span>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Email:</label>
+                    <input type="email" id="login-email" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Contraseña:</label>
+                    <input type="password" id="login-password" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <button type="submit" class="cta-button" style="width: 100%; margin-bottom: 15px; border: none; cursor: pointer;">Entrar</button>
+                <p style="text-align: center; font-size: 0.85rem; margin-bottom: 10px;"><a href="#" id="toggle-to-reset" style="color: var(--text-light); font-size: 0.8rem;">¿Olvidaste tu contraseña?</a></p>
+                <p style="text-align: center; font-size: 0.85rem;">¿No tienes cuenta? <a href="#" id="toggle-to-register" style="color: var(--secondary); font-weight: 700;">Regístrate aquí</a></p>
+            </form>
+
+            <!-- Reset Password Form (Hidden by default) -->
+            <form id="reset-password-form" style="display: none;">
+                <p style="font-size: 0.85rem; margin-bottom: 20px; color: var(--text-light);">Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Email:</label>
+                    <input type="email" id="reset-email" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <button type="submit" class="cta-button" style="width: 100%; margin-bottom: 15px; border: none; cursor: pointer; background: var(--accent); color: #000;">Enviar Enlace</button>
+                <p style="text-align: center; font-size: 0.85rem;"><a href="#" id="back-to-login" style="color: var(--secondary); font-weight: 700;">Volver al inicio de sesión</a></p>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form id="register-form" style="display: none;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Nombre Completo:</label>
+                    <input type="text" id="reg-name" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Teléfono:</label>
+                    <input type="tel" id="reg-phone" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Email:</label>
+                    <input type="email" id="reg-email" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Contraseña:</label>
+                    <input type="password" id="reg-password" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                </div>
+                <button type="submit" class="cta-button" style="width: 100%; margin-bottom: 15px; border: none; cursor: pointer; background: var(--secondary); box-shadow: 4px 4px 0px var(--primary);">Crear Cuenta</button>
+                <p style="text-align: center; font-size: 0.85rem;">¿Ya tienes cuenta? <a href="#" id="toggle-to-login" style="color: var(--secondary); font-weight: 700;">Inicia sesión</a></p>
+            </form>
+        </div>
+    </div>
 
     <!-- Intro Logo Animation -->
     <div id="intro-screen" class="intro-overlay">
