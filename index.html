@@ -14,6 +14,11 @@
 </head>
 
 <body>
+    <!-- Manchas de Graffiti detrás del contenido -->
+    <div class="splat splat-pink" style="top: 15%; left: -5%; width: 450px; height: 450px; opacity: 0.4; z-index: -1;"></div>
+    <div class="splat splat-blue" style="top: 50%; right: -5%; width: 500px; height: 500px; opacity: 0.4; z-index: -1;"></div>
+    <div class="splat splat-pink" style="bottom: 10%; left: 10%; width: 400px; height: 400px; opacity: 0.3; z-index: -1;"></div>
+
     <header>
         <div class="logo-container">
             <img src="logo_nuevo.jpg" alt="Logo Qué Bueno" class="logo-img">
@@ -32,6 +37,7 @@
     <main>
         <section class="hero">
             <div class="hero-content">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 0, 127, 0.2) 0%, transparent 70%); z-index: -1; filter: blur(30px);"></div>
                 <h1>El Auténtico Sabor del <span>Bocadillo</span></h1>
                 <p>Desde el clásico de jamón hasta nuestras creaciones más atrevidas. Más de 80 opciones para que
                     encuentres tu favorita.</p>
@@ -39,22 +45,22 @@
             </div>
         </section>
 
-        <section class="features" style="padding: 100px 10%; background: #fff;">
+        <section class="features" style="padding: 100px 10%; background: transparent;">
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; text-align: center;">
-                <div class="feature-card">
+                <div class="feature-card" style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🥖</div>
-                    <h3>Pan de Obrador</h3>
+                    <h3 style="color: var(--secondary);">Pan de Obrador</h3>
                     <p>Pan crujiente y recién horneado para que cada bocado sea perfecto.</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card" style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🍖</div>
-                    <h3>Ingredientes Premium</h3>
+                    <h3 style="color: var(--secondary);">Ingredientes Premium</h3>
                     <p>Seleccionamos los mejores embutidos y carnes para nuestra cocina.</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card" style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🚀</div>
-                    <h3>Rapidez y Calidad</h3>
+                    <h3 style="color: var(--secondary);">Rapidez y Calidad</h3>
                     <p>Tu pedido listo en tiempo récord sin sacrificar el sabor artesanal.</p>
                 </div>
             </div>
@@ -63,24 +69,27 @@
 
     <footer id="contacto">
         <img src="logo_nuevo.jpg" alt="Logo Qué Bueno" class="footer-logo">
-        <h2>Bocatería Qué Bueno</h2>
-        <p>Tu rincón favorito para comer bien.</p>
+        <h2 style="margin-bottom: 10px;">Bocatería Qué Bueno</h2>
         
-        <div class="social-links" style="margin-top: 30px; display: flex; justify-content: center; gap: 25px;">
-            <a href="https://wa.me/34603367180" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://instagram.com/bocateria_que_bueno" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-instagram"></i></a>
-            <a href="https://tiktok.com/@bocateria_quebueno" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-tiktok"></i></a>
+        <div class="social-links">
+            <a href="https://wa.me/34603367180" target="_blank"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://instagram.com/bocateria_que_bueno" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://tiktok.com/@bocateria_quebueno" target="_blank"><i class="fab fa-tiktok"></i></a>
         </div>
 
-        <div style="margin-top: 30px; opacity: 0.7;">
+        <div class="footer-info" style="opacity: 0.7; font-size: 0.9rem;">
             <p><i class="fas fa-phone-alt" style="margin-right: 10px;"></i> 603 36 71 80 (Pedidos)</p>
-            <p><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Calle Arroyo, 111A 41008 Sevilla, España</p>
-        </div>
-        <div
-            style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; font-size: 0.8rem;">
-            &copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.
+            <p><a href="https://www.google.com/maps/place/Bocater%C3%ADa+QueBueno!/@37.3985582,-5.9765186,17z/data=!3m1!4b1!4m6!3m5!1s0xd126f000ca0727d:0x4e7fcf7af2ab39a7!8m2!3d37.398554!4d-5.9739437!16s%2Fg%2F11zkkdyfhx?entry=ttu&g_ep=EgoyMDI2MDUxMC4wIKXMDSoASAFQAw%3D%3D" target="_blank"><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Calle Arroyo, 111A 41008 Sevilla, España</a></p>
+            <p style="margin-top: 20px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
         </div>
     </footer>
+
+    <!-- Intro Logo Animation -->
+    <div id="intro-screen" class="intro-overlay">
+        <div class="intro-content">
+            <img src="logo_nuevo.jpg" alt="Qué Bueno Logo" class="intro-logo">
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>

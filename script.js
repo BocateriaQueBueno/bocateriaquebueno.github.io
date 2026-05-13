@@ -88,16 +88,28 @@ async function loadMenu() {
         if (bError || pError) throw bError || pError;
 
         // Map items to a common format
-        const bFormatted = bocadillos.map(b => ({
-            id: b.id_bocadillo,
-            type: 'bocadillo',
-            name: b.nombre,
-            number: b.numero_menu,
-            ingredients: b.num_ingredientes,
-            price_caliente: Number(b.precio_caliente),
-            price_frio: b.precio_frio ? Number(b.precio_frio) : null,
-            category: getBocadilloCategory(b.num_ingredientes)
-        }));
+        const bFormatted = bocadillos.map((b, index) => {
+            const item = {
+                id: b.id_bocadillo,
+                type: 'bocadillo',
+                name: b.nombre,
+                number: b.numero_menu,
+                ingredients: b.num_ingredientes,
+                price_caliente: Number(b.precio_caliente.toString().replace(',', '.')), // Corregir formato de precio
+                price_frio: b.precio_frio ? Number(b.precio_frio.toString().replace(',', '.')) : null,
+                category: getBocadilloCategory(b.num_ingredientes),
+                image: b.image_url
+            };
+            
+            const lowerName = item.name.toLowerCase();
+            // Filtro ultra-flexible: busca 'pollo' y cualquier variante de 'emp' (empanado, empanao, emp.)
+            if (lowerName.includes('pollo') && lowerName.includes('emp')) {
+                console.log('FOTO ASIGNADA A:', item.name);
+                item.image = 'pollo_empanado.jpg';
+            }
+            
+            return item;
+        });
 
         const pFormatted = productos.map(p => ({
             id: p.id_producto,
@@ -142,13 +154,13 @@ function renderMenu() {
         if (item.price_frio) {
             priceHTML = `
                 <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f7ff; padding: 8px 12px; border-radius: 8px;">
-                        <span>❄️ ${item.price_frio.toFixed(2)}€</span>
-                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px;" onclick="addToCart(event, '${item.type}', ${item.id}, 'frio')">Añadir</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 255, 255, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--secondary);">
+                        <span style="color: var(--secondary); font-weight: 800;">❄️ ${item.price_frio.toFixed(2)}€</span>
+                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px; border-color: var(--secondary);" onclick="addToCart(event, '${item.type}', ${item.id}, 'frio')">Añadir</button>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #fff0f0; padding: 8px 12px; border-radius: 8px;">
-                        <span>♨️ ${item.price_caliente.toFixed(2)}€</span>
-                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 0, 255, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--primary);">
+                        <span style="color: var(--primary); font-weight: 800;">♨️ ${item.price_caliente.toFixed(2)}€</span>
+                        <button class="order-btn" style="margin: 0; width: auto; padding: 5px 15px; border-color: var(--primary); color: var(--primary);" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
                     </div>
                 </div>
             `;
@@ -161,12 +173,15 @@ function renderMenu() {
             `;
         }
 
+        const imageHTML = item.image ? `<img src="${item.image}" class="bocadillo-img" alt="${item.name}">` : '';
+
         return `
             <div class="bocadillo-card" data-id="${item.id}" data-type="${item.type}">
                 <div class="bocadillo-number">${item.number || ''}</div>
                 <h3>${item.name}</h3>
                 <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
                 ${priceHTML}
+                ${imageHTML}
             </div>
         `;
     }).join('');
@@ -320,14 +335,20 @@ function updateCartUI() {
 
     if (cart.length === 0) {
         cartItemsList.innerHTML = `<p style="text-align: center; opacity: 0.5;">Tu carrito está vacío.</p>`;
+        if (document.getElementById('pickup-time-container')) {
+            document.getElementById('pickup-time-container').style.display = 'none';
+        }
     } else {
+        if (document.getElementById('pickup-time-container')) {
+            document.getElementById('pickup-time-container').style.display = 'block';
+        }
         cartItemsList.innerHTML = cart.map((item, index) => {
             let extrasHTML = '';
             if (item.type === 'bocadillo') {
                 const selectedExtrasList = (item.selectedExtras || []).map((e, ei) => `
-                    <span style="background: #e9ecef; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                    <span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; gap: 8px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
                         ${e.name} (+${e.price.toFixed(2)}€)
-                        <b onclick="removeExtraFromItem(${index}, ${ei})" style="cursor: pointer; color: #e63946;">&times;</b>
+                        <b onclick="removeExtraFromItem(${index}, ${ei})" style="cursor: pointer; color: var(--primary); font-size: 1.1rem;">&times;</b>
                     </span>
                 `).join('');
 
@@ -339,13 +360,13 @@ function updateCartUI() {
                                 🥖 Pan Obrador (+0.30€)
                             </label>
                             
-                            <select onchange="addExtraToItem(${index}, this.value); this.value='';" style="font-size: 0.75rem; padding: 4px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; max-width: 150px;">
-                                <option value="">+ Añadir de la Foto...</option>
-                                <optgroup label="SALSAS (0.60€)">
-                                    ${PHOTO_EXTRAS.salsas.map(ex => `<option value="${ex.id}">${ex.name} (+${ex.price.toFixed(2)}€)</option>`).join('')}
+                            <select onchange="addExtraToItem(${index}, this.value); this.value='';" style="font-size: 0.75rem; padding: 6px; border-radius: 4px; border: 1px solid var(--secondary); background: #000; color: #fff; cursor: pointer; max-width: 160px;">
+                                <option value="" style="background: #000;">+ Añadir Extra...</option>
+                                <optgroup label="SALSAS (0.60€)" style="background: #111; color: var(--secondary);">
+                                    ${PHOTO_EXTRAS.salsas.map(ex => `<option value="${ex.id}" style="background: #000; color: #fff;">${ex.name} (+${ex.price.toFixed(2)}€)</option>`).join('')}
                                 </optgroup>
-                                <optgroup label="EXTRAS (Varios)">
-                                    ${PHOTO_EXTRAS.extras.map(ex => `<option value="${ex.id}">${ex.name} (+${ex.price.toFixed(2)}€)</option>`).join('')}
+                                <optgroup label="EXTRAS (Varios)" style="background: #111; color: var(--secondary);">
+                                    ${PHOTO_EXTRAS.extras.map(ex => `<option value="${ex.id}" style="background: #000; color: #fff;">${ex.name} (+${ex.price.toFixed(2)}€)</option>`).join('')}
                                 </optgroup>
                             </select>
                         </div>
@@ -406,6 +427,12 @@ if (checkoutBtn) {
     checkoutBtn.onclick = async () => {
         if (cart.length === 0) return alert('El carrito está vacío');
         
+        const pickupTime = document.getElementById('pickup-time').value;
+        if (!pickupTime) {
+            alert('Por favor, indica la hora a la que vendrás a recoger tu pedido.');
+            return;
+        }
+
         checkoutBtn.disabled = true;
         checkoutBtn.innerText = 'Procesando...';
 
@@ -427,11 +454,13 @@ if (checkoutBtn) {
                     tipo: 'para_llevar',
                     total: total,
                     metodo_pago: 'en_tienda',
-                    notas: notasExtras || 'Sin extras especiales'
+                    notas: notasExtras || 'Sin extras especiales',
+                    hora_recogida: pickupTime
                 }])
                 .select();
                 
             if (pedidoError) throw pedidoError;
+            if (!pedidoData || pedidoData.length === 0) throw new Error('No se pudo recuperar la información del pedido tras la inserción.');
             
             const idPedido = pedidoData[0].id_pedido;
             
@@ -473,8 +502,9 @@ if (checkoutBtn) {
             updateCartUI();
             cartModal.style.display = 'none';
         } catch (error) {
-            console.error('Error procesando el pedido:', error);
-            alert('Hubo un error al procesar tu pedido. Por favor, inténtalo de nuevo.');
+            console.error('Error detallado procesando el pedido:', error);
+            const errorMessage = error.message || error.details || JSON.stringify(error);
+            alert('Hubo un error al procesar tu pedido: ' + errorMessage);
         } finally {
             checkoutBtn.disabled = false;
             checkoutBtn.innerText = 'Confirmar Pedido (Pago en Tienda)';
@@ -484,3 +514,13 @@ if (checkoutBtn) {
 
 // Run init
 init();
+
+// Intro Animation Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const intro = document.getElementById('intro-screen');
+    if (intro) {
+        setTimeout(() => {
+            intro.remove();
+        }, 3000);
+    }
+});

@@ -129,6 +129,7 @@ CREATE TABLE pedido (
     total      DECIMAL(7,2) NOT NULL DEFAULT 0.00,
     notas      VARCHAR(300) DEFAULT NULL,
     metodo_pago  ENUM('online', 'en_tienda') NOT NULL,
+    hora_recogida TIME DEFAULT NULL,
     PRIMARY KEY (id_pedido),
     KEY idx_pedido_cliente (id_cliente),
     KEY idx_pedido_fecha   (fecha_hora),

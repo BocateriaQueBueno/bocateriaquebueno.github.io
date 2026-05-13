@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- Manchas de Graffiti detrás del contenido -->
+    <div class="splat splat-blue" style="top: 20%; left: -5%; width: 450px; height: 450px; opacity: 0.4; z-index: -1;"></div>
+    <div class="splat splat-pink" style="top: 70%; right: -5%; width: 500px; height: 500px; opacity: 0.4; z-index: -1;"></div>
+
     <header>
         <div class="logo-container">
             <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
@@ -66,6 +70,12 @@
                 <!-- Cart items here -->
                 <p style="text-align: center; opacity: 0.5;">Tu carrito está vacío.</p>
             </div>
+
+            <div id="pickup-time-container" style="margin-bottom: 25px; padding: 15px; background: rgba(0, 255, 255, 0.05); border-radius: 4px; border: 1px solid var(--secondary);">
+                <label for="pickup-time" style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--secondary);">🕒 Hora de recogida:</label>
+                <input type="time" id="pickup-time" required style="width: 100%; padding: 10px; border-radius: 4px; border: 2px solid var(--secondary); background: #000; color: #fff; font-family: inherit; font-size: 1rem;">
+                <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 5px;">Indica a qué hora vendrás a por tu pedido.</p>
+            </div>
             <div id="cart-summary" style="border-top: 2px solid #eee; padding-top: 20px;">
                 <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 800; margin-bottom: 20px;">
                     <span>Total:</span>
@@ -77,20 +87,20 @@
         </div>
     </div>
 
-    <footer style="background: #1d3557; color: white; padding: 60px 5%; text-align: center;">
-        <img src="logo_nuevo.jpg" alt="Logo Qué Bueno" class="footer-logo" style="height: 60px; border-radius: 50%; margin-bottom: 20px;">
+    <footer>
+        <img src="logo_nuevo.jpg" alt="Logo Qué Bueno" class="footer-logo">
         <h2 style="margin-bottom: 10px;">Bocatería Qué Bueno</h2>
         
-        <div class="social-links" style="margin-top: 20px; display: flex; justify-content: center; gap: 25px; margin-bottom: 30px;">
-            <a href="https://wa.me/34603367180" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://instagram.com/bocateria_que_bueno" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-instagram"></i></a>
-            <a href="https://tiktok.com/@bocateria_quebueno" target="_blank" style="color: white; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-tiktok"></i></a>
+        <div class="social-links">
+            <a href="https://wa.me/34603367180" target="_blank"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://instagram.com/bocateria_que_bueno" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://tiktok.com/@bocateria_quebueno" target="_blank"><i class="fab fa-tiktok"></i></a>
         </div>
 
-        <div style="opacity: 0.7; font-size: 0.9rem;">
+        <div class="footer-info" style="opacity: 0.7; font-size: 0.9rem;">
             <p><i class="fas fa-phone-alt" style="margin-right: 10px;"></i> 603 36 71 80 (Pedidos)</p>
-            <p><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Calle Arroyo, 111A 41008 Sevilla, España</p>
-            <p>&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
+            <p><a href="https://www.google.com/maps/place/Bocater%C3%ADa+QueBueno!/@37.3985582,-5.9765186,17z/data=!3m1!4b1!4m6!3m5!1s0xd126f000ca0727d:0x4e7fcf7af2ab39a7!8m2!3d37.398554!4d-5.9739437!16s%2Fg%2F11zkkdyfhx?entry=ttu&g_ep=EgoyMDI2MDUxMC4wIKXMDSoASAFQAw%3D%3D" target="_blank"><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Calle Arroyo, 111A 41008 Sevilla, España</a></p>
+            <p style="margin-top: 20px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
         </div>
     </footer>
 
