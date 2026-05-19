@@ -27,6 +27,7 @@
             <ul>
                 <li><a href="index.html" class="nav-home">Inicio</a></li>
                 <li><a href="order.html" class="nav-menu active">Carta</a></li>
+                <li><a href="#" id="open-tracking-modal" class="nav-track" style="color: var(--secondary); font-weight: 700;"><i class="fas fa-search" style="margin-right: 5px;"></i>Seguir Pedido</a></li>
                 <li id="auth-nav-item"><button id="open-auth-modal" class="filter-btn" style="padding: 5px 15px; font-size: 0.8rem; margin-left: 10px;">Acceso</button></li>
                 <li id="user-nav-item" style="display: none;">
                     <span id="user-name-display" style="font-size: 0.8rem; color: var(--secondary); font-weight: 700;"></span>
@@ -48,7 +49,7 @@
             <button class="filter-btn" data-category="2">2 Ingredientes</button>
             <button class="filter-btn" data-category="3">3 Ingredientes</button>
             <button class="filter-btn" data-category="4+">Especiales</button>
-            <button class="filter-btn" data-category="extras">Extras</button>
+            <button class="filter-btn" data-category="bebidas">Bebidas</button>
         </div>
 
         <div class="bocadillos-grid" id="menu-grid">
@@ -72,6 +73,11 @@
             <div class="modal-header">
                 <h2>Tu Pedido</h2>
                 <span class="close-modal" id="close-modal">&times;</span>
+            </div>
+            <!-- Active Orders tracking -->
+            <div id="active-orders-container" style="margin-bottom: 20px; display: none; padding: 15px; background: rgba(0, 229, 255, 0.1); border: 1px solid var(--secondary); border-radius: 4px;">
+                <h3 style="font-family: 'Permanent Marker', cursive; color: var(--secondary); margin-bottom: 10px; font-size: 1.1rem;"><i class="fas fa-fire" style="margin-right: 5px;"></i> Pedidos en Marcha</h3>
+                <div id="active-orders-list"></div>
             </div>
             <div id="cart-items-list" style="margin-bottom: 30px;">
                 <!-- Cart items here -->
@@ -168,6 +174,53 @@
             <p style="margin-top: 20px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
         </div>
     </footer>
+
+    <!-- Tracking Modal -->
+    <div class="modal" id="tracking-modal">
+        <div class="modal-content" style="max-width: 500px; border-color: var(--secondary); box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);">
+            <div class="modal-header">
+                <h2 style="font-family: 'Permanent Marker', cursive; color: var(--secondary);">Seguimiento de Pedido</h2>
+                <span class="close-modal" id="close-tracking-modal">&times;</span>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Introduce el código de 4 dígitos de tu pedido:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="track-code" placeholder="Ej. A7B9" maxlength="4" style="flex: 1; padding: 12px; background: #000; border: 2px solid var(--secondary); color: #fff; border-radius: 4px; font-size: 1.2rem; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 2px;">
+                    <button id="btn-track-submit" class="cta-button" style="border: none; cursor: pointer; padding: 10px 20px; font-size: 0.9rem;">Consultar</button>
+                </div>
+            </div>
+
+            <!-- Result Box (Hidden by default) -->
+            <div id="track-result" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <div id="track-result-info" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 0.9rem; opacity: 0.7;">Estado de tu pedido:</div>
+                    <div id="track-status-text" style="font-size: 1.5rem; font-weight: 800; text-transform: uppercase; margin-top: 5px; color: var(--primary);">PENDIENTE</div>
+                    <div id="track-pickup-info" style="font-size: 0.85rem; color: var(--text-light); margin-top: 5px;"></div>
+                </div>
+
+                <div class="tracking-steps">
+                    <div class="tracking-progress-bar" id="track-progress"></div>
+                    <div class="step-item" id="step-pendiente">
+                        <div class="step-icon"><i class="fas fa-clock"></i></div>
+                        <div class="step-label">En Cola</div>
+                    </div>
+                    <div class="step-item" id="step-preparando">
+                        <div class="step-icon"><i class="fas fa-fire"></i></div>
+                        <div class="step-label">Preparando</div>
+                    </div>
+                    <div class="step-item" id="step-listo">
+                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="step-label">Listo</div>
+                    </div>
+                    <div class="step-item" id="step-entregado">
+                        <div class="step-icon"><i class="fas fa-hamburger"></i></div>
+                        <div class="step-label">Entregado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>

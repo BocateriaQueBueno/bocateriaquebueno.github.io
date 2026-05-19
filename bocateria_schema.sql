@@ -58,6 +58,7 @@ CREATE TABLE bocadillo (
     num_ingredientes TINYINT       NOT NULL,
     precio_frio      DECIMAL(5,2)  DEFAULT NULL,
     precio_caliente  DECIMAL(5,2)  NOT NULL,
+    image_url        TEXT          DEFAULT NULL,
     disponible       BOOLEAN       NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_bocadillo),
     UNIQUE KEY uq_bocadillo_numero (numero_menu),
@@ -104,6 +105,7 @@ CREATE TABLE producto (
     nombre       VARCHAR(100)  NOT NULL,
     precio       DECIMAL(5,2)  NOT NULL,
     id_categoria INT           NOT NULL,
+    image_url    TEXT          DEFAULT NULL,
     disponible   BOOLEAN       NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_producto),
     CONSTRAINT fk_producto_categoria FOREIGN KEY (id_categoria)
@@ -129,6 +131,7 @@ CREATE TABLE pedido (
                    'cancelado'
                )            NOT NULL DEFAULT 'pendiente',
     tipo       ENUM('local', 'para_llevar') NOT NULL,
+    codigo_recogida VARCHAR(4) DEFAULT NULL,
     total      DECIMAL(7,2) NOT NULL DEFAULT 0.00,
     notas      VARCHAR(300) DEFAULT NULL,
     metodo_pago  ENUM('online', 'en_tienda') NOT NULL,
@@ -352,3 +355,122 @@ INSERT INTO bocadillo (numero_menu, nombre, num_ingredientes, precio_frio, preci
     (84, 'Cochinito + bacón + queso + papas paja + whisky',                      5, NULL, 3.90),
     (85, 'Daniela plus (Adobao + queso + tortilla f. + salsa)',                  4, NULL, 4.00),
     (86, 'Alan plus (Salchichas + bacón + queso + salsa)',                       4, NULL, 3.90);
+
+-- ------------------------------------------------------------
+-- PRODUCTOS: Bebidas (Categoría 1)
+-- ------------------------------------------------------------
+INSERT INTO producto (nombre, precio, id_categoria, disponible) VALUES
+    -- Latas 330ml
+    ('Coca cola (Lata 330ml)', 1.20, 1, TRUE),
+    ('Coca cola zero (Lata 330ml)', 1.20, 1, TRUE),
+    ('Coca cola zero zero (Lata 330ml)', 1.20, 1, TRUE),
+    ('Fanta naranja (Lata 330ml)', 1.20, 1, TRUE),
+    ('Fanta limón (Lata 330ml)', 1.20, 1, TRUE),
+    ('Fanta tutti frutti (Lata 330ml)', 1.20, 1, TRUE),
+    ('Fanta sandía (Lata 330ml)', 1.20, 1, TRUE),
+    ('Fanta frambuesa (Lata 330ml)', 1.20, 1, TRUE),
+    ('Aquarius naranja (Lata 330ml)', 1.20, 1, TRUE),
+    ('Aquarius limón (Lata 330ml)', 1.20, 1, TRUE),
+    ('Aquarius melocotón (Lata 330ml)', 1.20, 1, TRUE),
+    ('Nestea limón (Lata 330ml)', 1.20, 1, TRUE),
+    ('Nestea maracuyá (Lata 330ml)', 1.20, 1, TRUE),
+    ('Nestea frutos rojos (Lata 330ml)', 1.20, 1, TRUE),
+    ('Tónica (Lata 330ml)', 1.20, 1, TRUE),
+    ('Sprite (Lata 330ml)', 1.20, 1, TRUE),
+
+    -- Botellas 500ml
+    ('Cocacola normal (Botella 500ml)', 1.60, 1, TRUE),
+    ('Cocacola zero (Botella 500ml)', 1.60, 1, TRUE),
+    ('Aquarius (Botella 500ml)', 1.70, 1, TRUE),
+    ('Fuzetea (Botella 500ml)', 1.70, 1, TRUE),
+
+    -- Botellas 1.5L
+    ('Aquarius (Botella 1.5l)', 2.30, 1, TRUE),
+    ('Fuze-tea maracuyá (Botella 1.5l)', 2.30, 1, TRUE),
+
+    -- Botellas 2L
+    ('Cocacola normal (Botella 2l)', 2.20, 1, TRUE),
+    ('Cocacola zero (Botella 2l)', 2.20, 1, TRUE),
+    ('Fanta naranja (Botella 2l)', 2.20, 1, TRUE),
+    ('Fanta limón (Botella 2l)', 2.20, 1, TRUE),
+
+    -- Zumos
+    ('Zumo Bifrutas 4 sabores', 1.10, 1, TRUE),
+    ('Zumo Don Simon piña', 0.70, 1, TRUE),
+    ('Zumo Don Simon melocotón', 0.70, 1, TRUE),
+    ('Zumo Don Simon naranja', 0.70, 1, TRUE),
+    ('Zumo Rostroy piña-coco', 1.20, 1, TRUE),
+    ('Zumo Rostroy melocotón', 1.20, 1, TRUE),
+    ('Zumo Rostroy mango', 1.20, 1, TRUE),
+
+    -- Aguas
+    ('Agua 500ml', 0.60, 1, TRUE),
+    ('Agua 1.5l', 1.00, 1, TRUE),
+
+    -- Energéticas
+    ('Burl (Energética)', 1.30, 1, TRUE),
+    ('Monster 11 sabores (desde)', 1.85, 1, TRUE),
+    ('Red bull varios sabores', 1.70, 1, TRUE);
+
+-- ------------------------------------------------------------
+-- 9. SEGURIDAD Y PROTECCIÓN DE DATOS (RLS - Row Level Security)
+-- ------------------------------------------------------------
+
+-- Habilitar RLS en todas las tablas
+ALTER TABLE bocadillo ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categoria ENABLE ROW LEVEL SECURITY;
+ALTER TABLE producto ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cliente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedido ENABLE ROW LEVEL SECURITY;
+ALTER TABLE linea_pedido ENABLE ROW LEVEL SECURITY;
+
+-- Función de ayuda para saber si un usuario es admin de forma segura (sin recursión)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean AS $$
+DECLARE
+    is_adm boolean;
+BEGIN
+    SELECT es_admin INTO is_adm FROM public.cliente WHERE email = (auth.jwt() ->> 'email');
+    RETURN COALESCE(is_adm, false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Políticas para BOCADILLO, CATEGORIA, PRODUCTO
+CREATE POLICY "Lectura publica bocadillo" ON bocadillo FOR SELECT USING (true);
+CREATE POLICY "Admin todo bocadillo" ON bocadillo FOR ALL USING (public.is_admin());
+
+CREATE POLICY "Lectura publica categoria" ON categoria FOR SELECT USING (true);
+CREATE POLICY "Admin todo categoria" ON categoria FOR ALL USING (public.is_admin());
+
+CREATE POLICY "Lectura publica producto" ON producto FOR SELECT USING (true);
+CREATE POLICY "Admin todo producto" ON producto FOR ALL USING (public.is_admin());
+
+-- Políticas para CLIENTE
+CREATE POLICY "Usuarios ven su perfil y admin ve todo" ON cliente FOR SELECT USING (
+    email = (auth.jwt() ->> 'email') OR public.is_admin()
+);
+CREATE POLICY "Usuarios editan su perfil y admin edita todo" ON cliente FOR UPDATE USING (
+    email = (auth.jwt() ->> 'email') OR public.is_admin()
+);
+CREATE POLICY "Solo admin borra clientes" ON cliente FOR DELETE USING (public.is_admin());
+CREATE POLICY "Cualquiera puede insertar clientes (registro)" ON cliente FOR INSERT WITH CHECK (true);
+
+-- Políticas para PEDIDO
+CREATE POLICY "Usuario ve sus pedidos y admin ve todos" ON pedido FOR SELECT USING (
+    id_cliente IN (SELECT id_cliente FROM cliente WHERE email = (auth.jwt() ->> 'email')) 
+    OR 
+    public.is_admin()
+    OR
+    id_cliente IS NULL
+);
+CREATE POLICY "Cualquiera puede insertar pedidos" ON pedido FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin edita pedidos" ON pedido FOR UPDATE USING (public.is_admin());
+CREATE POLICY "Admin borra pedidos" ON pedido FOR DELETE USING (public.is_admin());
+
+-- Políticas para LINEA_PEDIDO
+CREATE POLICY "Usuario ve sus lineas y admin ve todas" ON linea_pedido FOR SELECT USING (
+    id_pedido IN (SELECT id_pedido FROM pedido WHERE id_cliente IN (SELECT id_cliente FROM cliente WHERE email = (auth.jwt() ->> 'email'))) OR public.is_admin()
+);
+CREATE POLICY "Cualquiera puede insertar lineas de pedido" ON linea_pedido FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin edita lineas" ON linea_pedido FOR UPDATE USING (public.is_admin());
+CREATE POLICY "Admin borra lineas" ON linea_pedido FOR DELETE USING (public.is_admin());

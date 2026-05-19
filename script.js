@@ -4,6 +4,29 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Global Toast System
+window.showToast = function(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span style="white-space: pre-line;">${message}</span>
+        <button style="background:none; border:none; color:#fff; cursor:pointer; font-weight:bold; font-size:1.1rem; padding:0; line-height: 1;" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.5s ease-out forwards';
+        setTimeout(() => toast.remove(), 500);
+    }, 6000);
+}
+
 const EXTRAS = {
     pan_obrador: { name: 'Pan Obrador', price: 0.30 }
 };
@@ -73,6 +96,220 @@ async function init() {
     }
     setupAuth();
     updateCartUI();
+    setupCookies();
+    setupTracking();
+    checkActiveOrders();
+    setInterval(checkActiveOrders, 20000);
+}
+
+function setupCookies() {
+    const cookieBanner = document.getElementById('cookie-banner');
+    const acceptCookiesBtn = document.getElementById('accept-cookies');
+    
+    if (cookieBanner && acceptCookiesBtn) {
+        if (!localStorage.getItem('cookies_accepted')) {
+            cookieBanner.style.display = 'flex';
+        }
+        
+        acceptCookiesBtn.addEventListener('click', () => {
+            localStorage.setItem('cookies_accepted', 'true');
+            cookieBanner.style.display = 'none';
+        });
+    }
+}
+
+// Setup Tracking Modal
+function setupTracking() {
+    const trackingModal = document.getElementById('tracking-modal');
+    const openTrackingBtn = document.getElementById('open-tracking-modal');
+    const closeTrackingBtn = document.getElementById('close-tracking-modal');
+    const btnTrackSubmit = document.getElementById('btn-track-submit');
+    const trackCodeInput = document.getElementById('track-code');
+    const trackResult = document.getElementById('track-result');
+    const trackStatusText = document.getElementById('track-status-text');
+    const trackPickupInfo = document.getElementById('track-pickup-info');
+    const trackProgress = document.getElementById('track-progress');
+    
+    const steps = {
+        pendiente: document.getElementById('step-pendiente'),
+        preparando: document.getElementById('step-preparando'),
+        listo: document.getElementById('step-listo'),
+        entregado: document.getElementById('step-entregado')
+    };
+
+    if (!trackingModal) return;
+
+    if (openTrackingBtn) {
+        openTrackingBtn.onclick = (e) => {
+            e.preventDefault();
+            trackingModal.style.display = 'flex';
+            if (trackCodeInput) {
+                trackCodeInput.value = '';
+                trackCodeInput.focus();
+            }
+            if (trackResult) trackResult.style.display = 'none';
+        };
+    }
+
+    if (closeTrackingBtn) {
+        closeTrackingBtn.onclick = () => trackingModal.style.display = 'none';
+    }
+
+    window.addEventListener('click', (e) => {
+        if (e.target === trackingModal) trackingModal.style.display = 'none';
+    });
+
+    if (btnTrackSubmit) {
+        btnTrackSubmit.onclick = async () => {
+            const code = trackCodeInput.value.trim().toUpperCase();
+            if (!code || code.length !== 4) {
+                showToast('Por favor, introduce un código de 4 caracteres válido.', 'error');
+                return;
+            }
+
+            btnTrackSubmit.disabled = true;
+            btnTrackSubmit.innerText = 'Buscando...';
+
+            try {
+                // Consultamos a través de la función RPC segura
+                const { data, error } = await supabaseClient.rpc('get_pedido_status', { p_codigo: code });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    showToast('Pedido no encontrado. Verifica el código de 4 dígitos.', 'error');
+                    trackResult.style.display = 'none';
+                    return;
+                }
+
+                const pedido = data[0];
+                trackResult.style.display = 'block';
+                
+                // Actualizar textos
+                let statusMsg = '';
+                let pickupMsg = '';
+                let progressWidth = '0%';
+                
+                // Limpiar clases
+                Object.values(steps).forEach(step => {
+                    step.classList.remove('active', 'completed');
+                });
+
+                if (pedido.estado === 'pendiente') {
+                    statusMsg = 'En Cola 🕒';
+                    pickupMsg = `Tu pedido está en cocina. Hora de recogida estimada: ${pedido.hora_recogida.substring(0, 5)}`;
+                    progressWidth = '0%';
+                    steps.pendiente.classList.add('active');
+                } else if (pedido.estado === 'preparando') {
+                    statusMsg = 'Preparándose 🔥';
+                    pickupMsg = `Estamos cocinando tus bocadillos. Estará listo muy pronto.`;
+                    progressWidth = '33%';
+                    steps.pendiente.classList.add('completed');
+                    steps.preparando.classList.add('active');
+                } else if (pedido.estado === 'listo') {
+                    statusMsg = '¡Listo para recoger! 🎉';
+                    pickupMsg = `¡Tu pedido está listo! Pásate por caja a recogerlo. Total a pagar: ${Number(pedido.total).toFixed(2)}€`;
+                    progressWidth = '66%';
+                    steps.pendiente.classList.add('completed');
+                    steps.preparando.classList.add('completed');
+                    steps.listo.classList.add('active');
+                } else if (pedido.estado === 'entregado') {
+                    statusMsg = 'Entregado ✔️';
+                    pickupMsg = `¡Pedido entregado! ¡Que aproveche!`;
+                    progressWidth = '100%';
+                    steps.pendiente.classList.add('completed');
+                    steps.preparando.classList.add('completed');
+                    steps.listo.classList.add('completed');
+                    steps.entregado.classList.add('active');
+                } else if (pedido.estado === 'cancelado') {
+                    statusMsg = 'Cancelado ❌';
+                    pickupMsg = `Este pedido ha sido cancelado. Ponte en contacto con nosotros si es un error.`;
+                    progressWidth = '0%';
+                }
+
+                trackStatusText.innerText = statusMsg;
+                trackPickupInfo.innerText = pickupMsg;
+                trackProgress.style.width = progressWidth;
+
+            } catch (err) {
+                console.error('Error buscando estado de pedido:', err);
+                showToast('Error al consultar el pedido.', 'error');
+            } finally {
+                btnTrackSubmit.disabled = false;
+                btnTrackSubmit.innerText = 'Consultar';
+            }
+        };
+    }
+}
+
+// Check Active Orders stored in LocalStorage and sync their status from DB
+async function checkActiveOrders() {
+    const container = document.getElementById('active-orders-container');
+    const list = document.getElementById('active-orders-list');
+    if (!container || !list) return;
+
+    let activeCodes = JSON.parse(localStorage.getItem('active_orders') || '[]');
+    if (activeCodes.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    let html = '';
+    let updatedCodes = [...activeCodes];
+
+    for (const code of activeCodes) {
+        try {
+            const { data, error } = await supabaseClient.rpc('get_pedido_status', { p_codigo: code });
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const pedido = data[0];
+                
+                // Si el pedido está entregado o cancelado, deja de ser activo
+                if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
+                    updatedCodes = updatedCodes.filter(c => c !== code);
+                    continue;
+                }
+
+                let statusLabel = 'En Cola 🕒';
+                let statusColor = '#ffb703';
+                if (pedido.estado === 'preparando') {
+                    statusLabel = 'Preparando 🔥';
+                    statusColor = '#ffb703';
+                } else if (pedido.estado === 'listo') {
+                    statusLabel = '¡Listo! 🎉';
+                    statusColor = '#2a9d8f';
+                }
+
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px; margin-bottom: 8px; border-left: 3px solid ${statusColor};">
+                        <div>
+                            <span style="font-weight: 900; color: #fff; letter-spacing: 1px; font-size: 0.95rem;">CÓDIGO: <strong style="color: var(--secondary);">${code}</strong></span><br>
+                            <span style="font-size: 0.75rem; color: #aaa;">Hora: ${pedido.hora_recogida.substring(0, 5)}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="background: ${statusColor}; color: ${pedido.estado === 'listo' ? '#fff' : '#000'}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase;">${statusLabel}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Si por alguna razón no se encuentra, lo removemos
+                updatedCodes = updatedCodes.filter(c => c !== code);
+            }
+        } catch (err) {
+            console.error('Error actualizando pedido activo:', err);
+        }
+    }
+
+    // Actualizar LocalStorage con los códigos que siguen activos
+    localStorage.setItem('active_orders', JSON.stringify(updatedCodes));
+
+    if (html) {
+        list.innerHTML = html;
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
 }
 
 // Data Fetching
@@ -104,8 +341,8 @@ async function loadMenu() {
             };
             
             const lowerName = item.name.toLowerCase();
-            // Filtro ultra-flexible: busca 'pollo' y cualquier variante de 'emp' (empanado, empanao, emp.)
-            if (lowerName.includes('pollo') && lowerName.includes('emp')) {
+            // Si no tiene imagen en DB, asignar pollo empanao por defecto si coincide
+            if (!item.image && lowerName.includes('pollo') && lowerName.includes('emp')) {
                 console.log('FOTO ASIGNADA A:', item.name);
                 item.image = 'pollo_empanado.jpg';
             }
@@ -119,7 +356,8 @@ async function loadMenu() {
             name: p.nombre,
             price_caliente: Number(p.precio),
             price_frio: null,
-            category: p.id_categoria === 1 ? 'bebidas' : (p.id_categoria === 2 ? 'extras' : 'salsas') // Mapeo básico de categorías
+            category: p.id_categoria === 1 ? 'bebidas' : (p.id_categoria === 2 ? 'extras' : 'salsas'), // Mapeo básico de categorías
+            image: p.image_url
         }));
 
         menuItems = [...bFormatted, ...pFormatted];
@@ -414,7 +652,10 @@ function setupFilters() {
 }
 
 if (cartToggle) {
-    cartToggle.onclick = () => cartModal.style.display = 'flex';
+    cartToggle.onclick = () => {
+        cartModal.style.display = 'flex';
+        checkActiveOrders();
+    };
 }
 
 if (closeModal) {
@@ -425,15 +666,15 @@ window.onclick = (e) => {
     if (e.target === cartModal) cartModal.style.display = 'none';
 };
 
-if (checkoutBtn) {
-    checkoutBtn.onclick = async () => {
-        if (cart.length === 0) return alert('El carrito está vacío');
-        
-        const pickupTime = document.getElementById('pickup-time').value;
-        if (!pickupTime) {
-            alert('Por favor, indica la hora a la que vendrás a recoger tu pedido.');
-            return;
-        }
+    if (checkoutBtn) {
+        checkoutBtn.onclick = async () => {
+            if (cart.length === 0) return showToast('El carrito está vacío', 'error');
+            
+            const pickupTime = document.getElementById('pickup-time').value;
+            if (!pickupTime) {
+                showToast('Por favor, indica la hora a la que vendrás a recoger tu pedido.', 'error');
+                return;
+            }
 
         checkoutBtn.disabled = true;
         checkoutBtn.innerText = 'Procesando...';
@@ -460,6 +701,13 @@ if (checkoutBtn) {
                 if (cData) idCliente = cData.id_cliente;
             }
 
+            // Generar código de recogida de 4 caracteres
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigoRecogida = '';
+            for (let i = 0; i < 4; i++) {
+                codigoRecogida += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
             // 1. Insert into pedido
             const { data: pedidoData, error: pedidoError } = await supabaseClient
                 .from('pedido')
@@ -469,7 +717,8 @@ if (checkoutBtn) {
                     metodo_pago: 'en_tienda',
                     notas: notasExtras || 'Sin extras especiales',
                     hora_recogida: pickupTime,
-                    id_cliente: idCliente
+                    id_cliente: idCliente,
+                    codigo_recogida: codigoRecogida
                 }])
                 .select();
                 
@@ -485,7 +734,9 @@ if (checkoutBtn) {
                     tipo_item: item.type,
                     cantidad: item.quantity,
                     precio_unitario: item.price,
-                    subtotal: item.price * item.quantity
+                    subtotal: item.price * item.quantity,
+                    pan_obrador: false,
+                    con_salsa: false
                 };
                 
                 if (item.type === 'bocadillo') {
@@ -510,7 +761,20 @@ if (checkoutBtn) {
                 
             if (lineasError) throw lineasError;
             
-            alert('¡Gracias por tu pedido! Te esperamos en la tienda para recogerlo y realizar el pago.');
+            let msg = '¡Gracias por tu pedido!\n\n';
+            if (currentUser && currentUser.user_metadata.full_name) {
+                msg = `¡Gracias por tu pedido, ${currentUser.user_metadata.full_name.split(' ')[0]}!\n\n`;
+            }
+            msg += `Tu código de recogida es: **${codigoRecogida}**\n\n`;
+            msg += 'Guarda este código. Te esperamos en la tienda a las ' + pickupTime + ' para recogerlo y realizar el pago.';
+            
+            // Guardar el código en localStorage para seguimiento activo
+            let activeCodes = JSON.parse(localStorage.getItem('active_orders') || '[]');
+            activeCodes.push(codigoRecogida);
+            localStorage.setItem('active_orders', JSON.stringify(activeCodes));
+            checkActiveOrders();
+
+            showToast(msg, 'success');
             cart = [];
             saveCart();
             updateCartUI();
@@ -518,7 +782,7 @@ if (checkoutBtn) {
         } catch (error) {
             console.error('Error detallado procesando el pedido:', error);
             const errorMessage = error.message || error.details || JSON.stringify(error);
-            alert('Hubo un error al procesar tu pedido: ' + errorMessage);
+            showToast('Hubo un error al procesar tu pedido: ' + errorMessage, 'error');
         } finally {
             checkoutBtn.disabled = false;
             checkoutBtn.innerText = 'Confirmar Pedido (Pago en Tienda)';
@@ -616,7 +880,7 @@ function setupAuth() {
             });
 
             if (error) {
-                alert('Error en el registro: ' + error.message);
+                showToast('Error en el registro: ' + error.message, 'error');
             } else {
                 // Guardar en nuestra tabla publica de clientes
                 const { error: dbError } = await supabaseClient
@@ -631,7 +895,7 @@ function setupAuth() {
                 
                 if (dbError) console.error('Error syncing to public.cliente:', dbError);
 
-                alert('¡Registro iniciado! Por favor, revisa tu correo electrónico para verificar tu cuenta antes de entrar.');
+                showToast('¡Registro iniciado! Por favor, revisa tu correo electrónico para verificar tu cuenta antes de entrar.', 'success');
                 authModal.style.display = 'none';
             }
         };
@@ -650,7 +914,7 @@ function setupAuth() {
             });
 
             if (error) {
-                alert('Error al entrar: ' + error.message);
+                showToast('Error al entrar: ' + error.message, 'error');
             } else {
                 authModal.style.display = 'none';
                 loginForm.reset();
@@ -669,9 +933,9 @@ function setupAuth() {
             });
 
             if (error) {
-                alert('Error: ' + error.message);
+                showToast('Error: ' + error.message, 'error');
             } else {
-                alert('¡Enlace enviado! Revisa tu correo electrónico para restablecer tu contraseña.');
+                showToast('¡Enlace enviado! Revisa tu correo electrónico para restablecer tu contraseña.', 'success');
                 resetForm.style.display = 'none';
                 loginForm.style.display = 'block';
                 authTitle.innerText = 'Iniciar Sesión';

@@ -31,6 +31,7 @@
             <ul>
                 <li><a href="index.html" class="nav-home">Inicio</a></li>
                 <li><a href="order.html" class="nav-menu">Carta</a></li>
+                <li><a href="#" id="open-tracking-modal" class="nav-track" style="color: var(--secondary); font-weight: 700;"><i class="fas fa-search" style="margin-right: 5px;"></i>Seguir Pedido</a></li>
                 <li><a href="#contacto" class="nav-contact">Contacto</a></li>
                 <li id="auth-nav-item"><button id="open-auth-modal" class="filter-btn" style="padding: 5px 15px; font-size: 0.8rem; margin-left: 10px;">Acceso</button></li>
                 <li id="user-nav-item" style="display: none;">
@@ -87,7 +88,12 @@
         <div class="footer-info" style="opacity: 0.7; font-size: 0.9rem;">
             <p><i class="fas fa-phone-alt" style="margin-right: 10px;"></i> 603 36 71 80 (Pedidos)</p>
             <p><a href="https://www.google.com/maps/place/Bocater%C3%ADa+QueBueno!/@37.3985582,-5.9765186,17z/data=!3m1!4b1!4m6!3m5!1s0xd126f000ca0727d:0x4e7fcf7af2ab39a7!8m2!3d37.398554!4d-5.9739437!16s%2Fg%2F11zkkdyfhx?entry=ttu&g_ep=EgoyMDI2MDUxMC4wIKXMDSoASAFQAw%3D%3D" target="_blank"><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Calle Arroyo, 111A 41008 Sevilla, España</a></p>
-            <p style="margin-top: 20px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
+            <div style="margin-top: 20px; font-size: 0.8rem; display: flex; justify-content: center; gap: 15px;">
+                <a href="legal.html#aviso-legal" style="color: var(--secondary);">Aviso Legal</a>
+                <a href="legal.html#privacidad" style="color: var(--secondary);">Política de Privacidad</a>
+                <a href="legal.html#cookies" style="color: var(--secondary);">Política de Cookies</a>
+            </div>
+            <p style="margin-top: 10px;">&copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.</p>
         </div>
     </footer>
 
@@ -143,9 +149,60 @@
                     <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Contraseña:</label>
                     <input type="password" id="reg-password" required style="width: 100%; padding: 12px; background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
                 </div>
+                <div style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.8rem; color: var(--text-light);">
+                    <input type="checkbox" id="reg-privacy" required style="margin-top: 2px;">
+                    <label for="reg-privacy">He leído y acepto la <a href="legal.html#privacidad" target="_blank" style="color: var(--secondary);">Política de Privacidad</a> y los Términos de Uso. Consiento el tratamiento de mis datos para gestionar mi cuenta y mis pedidos.</label>
+                </div>
                 <button type="submit" class="cta-button" style="width: 100%; margin-bottom: 15px; border: none; cursor: pointer; background: var(--secondary); box-shadow: 4px 4px 0px var(--primary);">Crear Cuenta</button>
                 <p style="text-align: center; font-size: 0.85rem;">¿Ya tienes cuenta? <a href="#" id="toggle-to-login" style="color: var(--secondary); font-weight: 700;">Inicia sesión</a></p>
             </form>
+        </div>
+    </div>
+
+    <!-- Tracking Modal -->
+    <div class="modal" id="tracking-modal">
+        <div class="modal-content" style="max-width: 500px; border-color: var(--secondary); box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);">
+            <div class="modal-header">
+                <h2 style="font-family: 'Permanent Marker', cursive; color: var(--secondary);">Seguimiento de Pedido</h2>
+                <span class="close-modal" id="close-tracking-modal">&times;</span>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.9rem;">Introduce el código de 4 dígitos de tu pedido:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="track-code" placeholder="Ej. A7B9" maxlength="4" style="flex: 1; padding: 12px; background: #000; border: 2px solid var(--secondary); color: #fff; border-radius: 4px; font-size: 1.2rem; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 2px;">
+                    <button id="btn-track-submit" class="cta-button" style="border: none; cursor: pointer; padding: 10px 20px; font-size: 0.9rem;">Consultar</button>
+                </div>
+            </div>
+
+            <!-- Result Box (Hidden by default) -->
+            <div id="track-result" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <div id="track-result-info" style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 0.9rem; opacity: 0.7;">Estado de tu pedido:</div>
+                    <div id="track-status-text" style="font-size: 1.5rem; font-weight: 800; text-transform: uppercase; margin-top: 5px; color: var(--primary);">PENDIENTE</div>
+                    <div id="track-pickup-info" style="font-size: 0.85rem; color: var(--text-light); margin-top: 5px;"></div>
+                </div>
+
+                <div class="tracking-steps">
+                    <div class="tracking-progress-bar" id="track-progress"></div>
+                    <div class="step-item" id="step-pendiente">
+                        <div class="step-icon"><i class="fas fa-clock"></i></div>
+                        <div class="step-label">En Cola</div>
+                    </div>
+                    <div class="step-item" id="step-preparando">
+                        <div class="step-icon"><i class="fas fa-fire"></i></div>
+                        <div class="step-label">Preparando</div>
+                    </div>
+                    <div class="step-item" id="step-listo">
+                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="step-label">Listo</div>
+                    </div>
+                    <div class="step-item" id="step-entregado">
+                        <div class="step-icon"><i class="fas fa-hamburger"></i></div>
+                        <div class="step-label">Entregado</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -155,7 +212,15 @@
             <img src="logo_nuevo.jpg" alt="Qué Bueno Logo" class="intro-logo">
         </div>
     </div>
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner" style="display: none;">
+        <div class="cookie-content">
+            <p>Utilizamos cookies propias y de terceros (Supabase) estrictamente necesarias para gestionar tu sesión y procesar tus pedidos de forma segura. Al pulsar "Aceptar", consientes su uso. <a href="legal.html#cookies">Política de Cookies</a></p>
+            <button id="accept-cookies" class="cta-button" style="padding: 10px 20px; font-size: 0.9rem; margin-left: 15px;">Aceptar</button>
+        </div>
+    </div>
 
+    <!-- Cargar Supabase primero -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>

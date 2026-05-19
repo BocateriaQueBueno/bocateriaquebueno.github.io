@@ -120,6 +120,67 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Adaptación perfecta a móviles para el Admin */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .admin-container {
+                padding: 10px;
+            }
+            .admin-header {
+                margin-bottom: 25px;
+                padding-bottom: 10px;
+            }
+            .admin-header h1 {
+                font-size: 1.8rem !important;
+                text-align: center;
+                width: 100%;
+            }
+            .admin-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+            .tab-btn {
+                font-size: 0.9rem;
+                padding: 8px 10px;
+            }
+            .admin-card {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px;
+                text-align: left;
+            }
+            .admin-card > div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            /* Botones de acción alineados en móvil */
+            .admin-card > div:last-child {
+                flex-direction: row;
+                gap: 8px;
+            }
+            .admin-card .action-btn {
+                flex: 1;
+                text-align: center;
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            .admin-card .btn-edit {
+                margin-right: 0;
+            }
+            .btn-add {
+                width: 100%;
+                text-align: center;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -142,6 +203,7 @@
             <button class="tab-btn active" onclick="showSection(event, 'bocadillos')">Bocadillos</button>
             <button class="tab-btn" onclick="showSection(event, 'productos')">Otros Productos</button>
             <button class="tab-btn" onclick="showSection(event, 'clientes')">Clientes</button>
+            <button class="tab-btn" onclick="showSection(event, 'pedidos')">Pedidos</button>
         </div>
 
         <!-- Section Bocadillos -->
@@ -163,6 +225,14 @@
         <!-- Section Clientes -->
         <section id="clientes" class="admin-section">
             <div id="admin-clientes-list">
+                <!-- Se carga dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Section Pedidos -->
+        <section id="pedidos" class="admin-section">
+            <h2 style="margin-bottom: 20px; color: var(--secondary);">Gestión de Pedidos</h2>
+            <div id="admin-pedidos-list">
                 <!-- Se carga dinámicamente -->
             </div>
         </section>
