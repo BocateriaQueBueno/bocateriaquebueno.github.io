@@ -202,7 +202,28 @@ async function toggleIngredienteAvailability(id_ingrediente, nombre, currentStat
             showToast('Ingrediente agotado. Ningún bocadillo se vio afectado.', 'success');
         }
     } else {
-        showToast('Ingrediente disponible de nuevo.\\n(Recuerda reactivar manualmente los bocadillos si lo deseas).', 'info');
+        const keywords = ingredientMapping[nombre] || [nombre.toLowerCase()];
+        
+        const afectados = allBocadillos.filter(b => {
+            const bName = b.nombre.toLowerCase();
+            return keywords.some(kw => bName.includes(kw));
+        });
+        
+        if (afectados.length > 0) {
+            const idsAfectados = afectados.map(a => a.id_bocadillo);
+            const { error: err3 } = await supabaseClient
+                .from('bocadillo')
+                .update({ disponible: true })
+                .in('id_bocadillo', idsAfectados);
+                
+            if (err3) {
+                showToast('Error al reactivar bocadillos: ' + err3.message, 'error');
+            } else {
+                showToast(`Ingrediente disponible de nuevo.\n¡Se han reactivado ${afectados.length} bocadillos automáticamente!`, 'success');
+            }
+        } else {
+            showToast('Ingrediente disponible de nuevo.', 'success');
+        }
     }
     
     loadData();
