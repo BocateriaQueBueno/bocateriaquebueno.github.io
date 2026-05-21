@@ -341,13 +341,6 @@ async function loadMenu() {
                 disponible: b.disponible
             };
             
-            const lowerName = item.name.toLowerCase();
-            // Si no tiene imagen en DB, asignar pollo empanao por defecto si coincide
-            if (!item.image && lowerName.includes('pollo') && lowerName.includes('emp')) {
-                console.log('FOTO ASIGNADA A:', item.name);
-                item.image = 'pollo_empanado.jpg';
-            }
-            
             return item;
         });
 
