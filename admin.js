@@ -69,6 +69,7 @@ function showSection(event, sectionId) {
 async function loadData() {
     loadBocadillos();
     loadProductos();
+    loadIngredientes();
     loadClientes();
     loadPedidos();
     if (!pedidosInterval) {
@@ -96,6 +97,114 @@ async function loadBocadillos() {
             </div>
         </div>
     `).join('');
+}
+
+const ingredientMapping = {
+    'Pollo empanado': ['pollo emp'],
+    'Salchichón ibérico': ['salchichón ibérico', 'salchichon iberico'],
+    'Jamón serrano': ['jamón serrano', 'jamon serrano', 'j. serrano', 'jamón', 'jamon'],
+    'Queso curado': ['queso curado'],
+    'Carne mechada': ['carne mechada', 'mecha'],
+    'Pollo relleno': ['pollo relleno'],
+    'Salchichón turón': ['salchichón turón', 'salchichon turon'],
+    'Tortilla de papas': ['tortilla de papas', 'tortilla papas'],
+    'Lomo adobado': ['lomo adobao', 'adobao', 'adobado'],
+    'Cochinito': ['cochinito'],
+    'Salchichas': ['salchichas', 'salchicha'],
+    'Bacón': ['bacón', 'bacon'],
+    'Pechuga de pavo': ['pechuga de pavo', 'pavo'],
+    'Jamón york': ['jamón york', 'jamon york'],
+    'Chorizo': ['chorizo'],
+    'Salami': ['salami'],
+    'Salchichón': ['salchichón', 'salchichon'],
+    'Mortadela': ['mortadela'],
+    'Chóped': ['chóped', 'choped'],
+    'Queso': ['queso'],
+    'Queso cheddar': ['queso cheddar', 'cheddar'],
+    'Rulo de cabra': ['rulo de cabra', 'rulo'],
+    'Roquefort': ['roquefort'],
+    'Tortilla francesa': ['tortilla francesa', 't. francesa', 'tortilla f.'],
+    'Pollo asado': ['pollo asado'],
+    'Kebab de pollo': ['kebab de pollo', 'kebab'],
+    'Tomate natural': ['tomate natural', 'tomate'],
+    'Patatas paja': ['patatas paja', 'papas paja', 'papas pajas'],
+    'Mojo picón': ['mojo picón', 'mojo picon'],
+    'Salsa whisky': ['salsa whisky', 'whisky'],
+    'Salsa gaucha': ['salsa gaucha', 'gaucha'],
+    'Salsa hot': ['salsa hot'],
+    'Salsa yogurt': ['salsa yogurt', 's. yogurt'],
+    'Miel': ['miel']
+};
+
+async function loadIngredientes() {
+    const { data } = await supabaseClient.from('ingrediente').select('*').order('nombre');
+    const list = document.getElementById('admin-ingredientes-list');
+    
+    if (!data) {
+        list.innerHTML = '<p style="color:red;">Error cargando ingredientes. Asegúrate de ejecutar el comando SQL.</p>';
+        return;
+    }
+    
+    list.innerHTML = data.map(ing => {
+        const isDisponible = ing.disponible !== false; 
+        
+        return `
+        <div class="admin-card" style="padding: 10px; align-items: center;">
+            <div style="flex: 2;">
+                <strong>${ing.nombre}</strong>
+            </div>
+            <div style="flex: 1; display: flex; justify-content: flex-end;">
+                <button class="action-btn ${isDisponible ? 'btn-disponible' : 'btn-no-disponible'}" 
+                        onclick="toggleIngredienteAvailability(${ing.id_ingrediente}, '${ing.nombre}', ${isDisponible})"
+                        style="margin: 0; width: 100px;">
+                    ${isDisponible ? 'Disponible' : 'Agotado'}
+                </button>
+            </div>
+        </div>
+    `}).join('');
+}
+
+async function toggleIngredienteAvailability(id_ingrediente, nombre, currentStatus) {
+    const newStatus = !currentStatus;
+    
+    const { error: err1 } = await supabaseClient
+        .from('ingrediente')
+        .update({ disponible: newStatus })
+        .eq('id_ingrediente', id_ingrediente);
+        
+    if (err1) {
+        showToast('Error al actualizar ingrediente. ¿Ejecutaste el script SQL?: ' + err1.message, 'error');
+        return;
+    }
+    
+    if (newStatus === false) {
+        const keywords = ingredientMapping[nombre] || [nombre.toLowerCase()];
+        
+        const afectados = allBocadillos.filter(b => {
+            const bName = b.nombre.toLowerCase();
+            return keywords.some(kw => bName.includes(kw));
+        });
+        
+        if (afectados.length > 0) {
+            const idsAfectados = afectados.map(a => a.id_bocadillo);
+            const { error: err2 } = await supabaseClient
+                .from('bocadillo')
+                .update({ disponible: false })
+                .in('id_bocadillo', idsAfectados);
+                
+            if (err2) {
+                showToast('Error al desactivar bocadillos: ' + err2.message, 'error');
+            } else {
+                showToast(`Ingrediente agotado.\\n¡Se han desactivado ${afectados.length} bocadillos automáticamente!`, 'success');
+            }
+        } else {
+            showToast('Ingrediente agotado. Ningún bocadillo se vio afectado.', 'success');
+        }
+    } else {
+        showToast('Ingrediente disponible de nuevo.\\n(Recuerda reactivar manualmente los bocadillos si lo deseas).', 'info');
+    }
+    
+    loadData();
 }
 
 async function loadProductos() {

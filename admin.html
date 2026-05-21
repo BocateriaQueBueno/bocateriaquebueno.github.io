@@ -204,6 +204,7 @@
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="showSection(event, 'bocadillos')">Bocadillos</button>
             <button class="tab-btn" onclick="showSection(event, 'productos')">Otros Productos</button>
+            <button class="tab-btn" onclick="showSection(event, 'ingredientes')">Ingredientes</button>
             <button class="tab-btn" onclick="showSection(event, 'clientes')">Clientes</button>
             <button class="tab-btn" onclick="showSection(event, 'pedidos')">Pedidos</button>
         </div>
@@ -212,6 +213,17 @@
         <section id="bocadillos" class="admin-section active">
             <button class="action-btn btn-add" onclick="openAddModal('bocadillo')">+ Añadir Nuevo Bocadillo</button>
             <div id="admin-bocadillos-list">
+                <!-- Se carga dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Section Ingredientes -->
+        <section id="ingredientes" class="admin-section">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">Control de Stock por Ingredientes</h2>
+            <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">
+                Al marcar un ingrediente como "Agotado", se desactivarán automáticamente todos los bocadillos que lo contengan en su nombre.
+            </p>
+            <div id="admin-ingredientes-list">
                 <!-- Se carga dinámicamente -->
             </div>
         </section>
