@@ -423,6 +423,9 @@ ALTER TABLE producto ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cliente ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pedido ENABLE ROW LEVEL SECURITY;
 ALTER TABLE linea_pedido ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ingrediente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bocadillo_ingrediente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pago ENABLE ROW LEVEL SECURITY;
 
 -- Función de ayuda para saber si un usuario es admin de forma segura (sin recursión)
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -444,6 +447,12 @@ CREATE POLICY "Admin todo categoria" ON categoria FOR ALL USING (public.is_admin
 
 CREATE POLICY "Lectura publica producto" ON producto FOR SELECT USING (true);
 CREATE POLICY "Admin todo producto" ON producto FOR ALL USING (public.is_admin());
+
+CREATE POLICY "Lectura publica ingrediente" ON ingrediente FOR SELECT USING (true);
+CREATE POLICY "Admin todo ingrediente" ON ingrediente FOR ALL USING (public.is_admin());
+
+CREATE POLICY "Lectura publica bocadillo_ingrediente" ON bocadillo_ingrediente FOR SELECT USING (true);
+CREATE POLICY "Admin todo bocadillo_ingrediente" ON bocadillo_ingrediente FOR ALL USING (public.is_admin());
 
 -- Políticas para CLIENTE
 CREATE POLICY "Usuarios ven su perfil y admin ve todo" ON cliente FOR SELECT USING (
@@ -474,3 +483,11 @@ CREATE POLICY "Usuario ve sus lineas y admin ve todas" ON linea_pedido FOR SELEC
 CREATE POLICY "Cualquiera puede insertar lineas de pedido" ON linea_pedido FOR INSERT WITH CHECK (true);
 CREATE POLICY "Admin edita lineas" ON linea_pedido FOR UPDATE USING (public.is_admin());
 CREATE POLICY "Admin borra lineas" ON linea_pedido FOR DELETE USING (public.is_admin());
+
+-- Políticas para PAGO
+CREATE POLICY "Usuario ve sus pagos y admin ve todos" ON pago FOR SELECT USING (
+    id_pedido IN (SELECT id_pedido FROM pedido WHERE id_cliente IN (SELECT id_cliente FROM cliente WHERE email = (auth.jwt() ->> 'email'))) OR public.is_admin()
+);
+CREATE POLICY "Cualquiera puede insertar pagos" ON pago FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin edita pagos" ON pago FOR UPDATE USING (public.is_admin());
+CREATE POLICY "Admin borra pagos" ON pago FOR DELETE USING (public.is_admin());
