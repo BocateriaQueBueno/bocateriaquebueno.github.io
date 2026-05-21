@@ -59,6 +59,9 @@ const PHOTO_EXTRAS = {
     ]
 };
 
+// Configuracion Global
+let configuracionTienda = null;
+
 // State
 let menuItems = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -89,6 +92,7 @@ const checkoutBtn = document.getElementById('checkout-btn');
 
 // Initialization
 async function init() {
+    await loadConfiguracion();
     if (menuGrid) {
         await loadMenu();
         renderMenu();
@@ -100,6 +104,54 @@ async function init() {
     setupTracking();
     checkActiveOrders();
     setInterval(checkActiveOrders, 20000);
+}
+
+async function loadConfiguracion() {
+    try {
+        const { data, error } = await supabaseClient.from('configuracion').select('horarios').eq('id', 1).single();
+        if (!error && data) {
+            configuracionTienda = data.horarios;
+        }
+    } catch (e) {
+        console.error("No se pudo cargar la configuración:", e);
+    }
+}
+
+function isShopOpen() {
+    if (!configuracionTienda) return true; // Abierto por defecto si falla la carga
+    
+    const now = new Date();
+    const day = now.getDay(); // 0: Dom, 1: Lun ... 6: Sab
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour + currentMinute / 60.0;
+    
+    const parseTime = (timeStr) => {
+        if (!timeStr) return null;
+        const [h, m] = timeStr.split(':');
+        return parseInt(h) + parseInt(m) / 60.0;
+    };
+    
+    const h = configuracionTienda;
+    
+    if (day >= 1 && day <= 5) { // Lunes a Viernes
+        const mStart = parseTime(h.lv_manana_start);
+        const mEnd = parseTime(h.lv_manana_end);
+        const tStart = parseTime(h.lv_tarde_start);
+        const tEnd = parseTime(h.lv_tarde_end);
+        
+        const isManana = (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
+        const isTarde = (tStart !== null && tEnd !== null) && (currentTime >= tStart && currentTime <= tEnd);
+        
+        return isManana || isTarde;
+    } else if (day === 6) { // Sabado
+        const mStart = parseTime(h.sabado_start);
+        const mEnd = parseTime(h.sabado_end);
+        
+        return (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
+    } else {
+        return false; // Domingo o sin configurar
+    }
 }
 
 function setupCookies() {
@@ -466,6 +518,11 @@ window.goToPage = function(page) {
 
 // Cart Logic
 window.addToCart = function(event, type, id, temp = 'caliente') {
+    if (!isShopOpen()) {
+        showToast('Lo sentimos, el establecimiento está cerrado en este momento.\\nPor favor, revisa nuestros horarios.', 'error');
+        return;
+    }
+
     const item = menuItems.find(i => i.type === type && i.id === id);
     if (!item || item.disponible === false) return;
 

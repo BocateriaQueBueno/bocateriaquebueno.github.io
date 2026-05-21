@@ -72,6 +72,7 @@ async function loadData() {
     loadIngredientes();
     loadClientes();
     loadPedidos();
+    loadConfiguracion();
     if (!pedidosInterval) {
         pedidosInterval = setInterval(loadPedidos, 30000); // 30 seconds
     }
@@ -278,6 +279,49 @@ async function deleteItem(table, id) {
     else {
         showToast('Eliminado correctamente', 'success');
         loadData();
+    }
+}
+
+async function toggleProductosAvailability(id_producto, currentStatus) {
+    const newStatus = !currentStatus;
+    const { error } = await supabaseClient.from('producto').update({ disponible: newStatus }).eq('id_producto', id_producto);
+    if (error) {
+        showToast('Error al actualizar disponibilidad: ' + error.message, 'error');
+    } else {
+        loadProductos();
+    }
+}
+
+async function loadConfiguracion() {
+    const { data, error } = await supabaseClient.from('configuracion').select('horarios').eq('id', 1).single();
+    if (error || !data) {
+        console.error("Error cargando configuración, puede que la tabla no exista:", error);
+        return;
+    }
+    const h = data.horarios;
+    document.getElementById('lv_manana_start').value = h.lv_manana_start || '';
+    document.getElementById('lv_manana_end').value = h.lv_manana_end || '';
+    document.getElementById('lv_tarde_start').value = h.lv_tarde_start || '';
+    document.getElementById('lv_tarde_end').value = h.lv_tarde_end || '';
+    document.getElementById('sabado_start').value = h.sabado_start || '';
+    document.getElementById('sabado_end').value = h.sabado_end || '';
+}
+
+async function saveHorarios() {
+    const horarios = {
+        lv_manana_start: document.getElementById('lv_manana_start').value,
+        lv_manana_end: document.getElementById('lv_manana_end').value,
+        lv_tarde_start: document.getElementById('lv_tarde_start').value,
+        lv_tarde_end: document.getElementById('lv_tarde_end').value,
+        sabado_start: document.getElementById('sabado_start').value,
+        sabado_end: document.getElementById('sabado_end').value
+    };
+    
+    const { error } = await supabaseClient.from('configuracion').update({ horarios: horarios }).eq('id', 1);
+    if (error) {
+        showToast('Error guardando horarios: ' + error.message, 'error');
+    } else {
+        showToast('Horarios guardados correctamente.', 'success');
     }
 }
 

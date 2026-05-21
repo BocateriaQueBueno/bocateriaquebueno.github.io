@@ -207,6 +207,7 @@
             <button class="tab-btn" onclick="showSection(event, 'ingredientes')">Ingredientes</button>
             <button class="tab-btn" onclick="showSection(event, 'clientes')">Clientes</button>
             <button class="tab-btn" onclick="showSection(event, 'pedidos')">Pedidos</button>
+            <button class="tab-btn" onclick="showSection(event, 'horarios')">Horarios</button>
         </div>
 
         <!-- Section Bocadillos -->
@@ -225,6 +226,43 @@
             </p>
             <div id="admin-ingredientes-list">
                 <!-- Se carga dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Section Horarios -->
+        <section id="horarios" class="admin-section">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">Configuración de Horarios</h2>
+            <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">
+                Define el horario de apertura. Fuera de estas horas, los clientes no podrán hacer pedidos.
+            </p>
+            <div class="admin-card" style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <h3 style="color: var(--secondary); margin-bottom: 10px;">Lunes a Viernes</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                        <span>Mañana:</span>
+                        <input type="time" id="lv_manana_start" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        <span>a</span>
+                        <input type="time" id="lv_manana_end" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span>Tarde: &nbsp;&nbsp;</span>
+                        <input type="time" id="lv_tarde_start" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        <span>a</span>
+                        <input type="time" id="lv_tarde_end" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    </div>
+                </div>
+                <hr style="border: 1px solid rgba(255,255,255,0.1);">
+                <div>
+                    <h3 style="color: var(--secondary); margin-bottom: 10px;">Sábados</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span>Mañana:</span>
+                        <input type="time" id="sabado_start" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        <span>a</span>
+                        <input type="time" id="sabado_end" style="padding: 5px; border-radius: 4px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    </div>
+                </div>
+                <hr style="border: 1px solid rgba(255,255,255,0.1);">
+                <button class="action-btn btn-disponible" onclick="saveHorarios()" style="width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 10px;">Guardar Horarios</button>
             </div>
         </section>
 
