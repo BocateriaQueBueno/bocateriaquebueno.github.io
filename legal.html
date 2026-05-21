@@ -78,6 +78,11 @@
                 <li><a href="index.html" class="nav-home">Volver al Inicio</a></li>
             </ul>
         </nav>
+        <button class="hamburger" id="hamburger-btn" aria-label="Abrir menú">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </header>
 
     <main>
@@ -174,6 +179,23 @@
             &copy; 2026 Bocatería Qué Bueno. Todos los derechos reservados.
         </div>
     </footer>
+    <script>
+        const hBtn = document.getElementById('hamburger-btn');
+        const hNav = document.querySelector('header nav');
+        if (hBtn && hNav) {
+            hBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hNav.classList.toggle('open');
+                hBtn.classList.toggle('active');
+            });
+            document.addEventListener('click', (e) => {
+                if (!hBtn.contains(e.target) && !hNav.contains(e.target)) {
+                    hNav.classList.remove('open');
+                    hBtn.classList.remove('active');
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

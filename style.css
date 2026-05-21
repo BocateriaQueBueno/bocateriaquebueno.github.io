@@ -853,3 +853,273 @@ footer {
     color: var(--primary);
 }
 
+/* ============================================================
+   HAMBURGER BUTTON
+   ============================================================ */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 22px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+    flex-shrink: 0;
+}
+
+.hamburger span {
+    display: block;
+    height: 3px;
+    width: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: translateY(9.5px) rotate(45deg);
+}
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.hamburger.active span:nth-child(3) {
+    transform: translateY(-9.5px) rotate(-45deg);
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET & MOBILE  (max-width: 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* Prevent horizontal scroll globally */
+    html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    /* ---- HEADER / NAV ---- */
+    header {
+        padding: 0 4%;
+        height: 70px;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    header nav {
+        display: none;
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background: rgba(10, 10, 10, 0.98);
+        backdrop-filter: blur(15px);
+        border-bottom: 2px solid var(--primary);
+        z-index: 999;
+        padding: 20px 5%;
+        flex-direction: column;
+    }
+
+    header nav.open {
+        display: flex;
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+    }
+
+    nav ul li {
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    nav ul li:last-child {
+        border-bottom: none;
+    }
+
+    nav a, nav ul li button {
+        display: block;
+        padding: 14px 5px;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    nav ul li button#open-auth-modal {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+        text-align: center;
+    }
+
+    #user-nav-item {
+        padding: 14px 5px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start !important;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+        padding: 0 5%;
+        min-height: 100vh;
+    }
+
+    .hero::before {
+        font-size: 28vw;
+        top: 5%;
+        left: -3%;
+    }
+
+    .hero-content {
+        width: 100%;
+    }
+
+    .hero-content h1 {
+        font-size: clamp(2.5rem, 12vw, 4rem);
+        letter-spacing: 0;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+        margin-bottom: 30px;
+    }
+
+    .cta-button {
+        padding: 14px 30px;
+        font-size: 0.95rem;
+    }
+
+    /* ---- FEATURES SECTION ---- */
+    .features, section.features {
+        padding: 60px 5% !important;
+    }
+
+    /* ---- MENU / CARTA ---- */
+    .menu-container {
+        padding: 90px 4% 60px;
+    }
+
+    .section-title h2 {
+        font-size: 2.5rem;
+    }
+
+    .filter-bar {
+        gap: 8px;
+        margin-bottom: 30px;
+    }
+
+    .filter-btn {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+    }
+
+    .bocadillos-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* ---- BOCADILLO CARD ---- */
+    .bocadillo-number {
+        font-size: 3.5rem;
+    }
+
+    /* ---- CART FLOAT ---- */
+    .cart-float {
+        bottom: 20px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+    }
+
+    /* ---- MODAL ---- */
+    .modal-content {
+        width: 94%;
+        margin: 10px;
+        padding: 20px;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+        padding: 40px 5%;
+    }
+
+    .social-links {
+        gap: 20px;
+    }
+
+    .footer-info div[style] {
+        flex-direction: column;
+        gap: 8px !important;
+    }
+
+    /* ---- LEGAL PAGE ---- */
+    .legal-container {
+        margin: 90px 10px 30px !important;
+        padding: 20px !important;
+    }
+
+    /* ---- SPLATS (manchas): ocultarlas en móvil para evitar overflow) ---- */
+    .splat {
+        display: none;
+    }
+
+    /* ---- TOAST ---- */
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: 100%;
+    }
+
+    .toast {
+        font-size: 0.85rem;
+    }
+
+    /* ---- TRACKING STEPS ---- */
+    .step-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+
+    .step-label {
+        font-size: 0.65rem;
+    }
+
+    /* ---- COOKIE BANNER ---- */
+    .cookie-banner {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+
+    .cookie-content {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE - SMALL TABLETS  (769px - 1024px)
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+    nav ul {
+        gap: 15px;
+    }
+
+    .bocadillos-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .menu-container {
+        padding: 100px 4% 60px;
+    }
+}
