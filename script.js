@@ -337,7 +337,8 @@ async function loadMenu() {
                 price_caliente: Number(b.precio_caliente.toString().replace(',', '.')), // Corregir formato de precio
                 price_frio: b.precio_frio ? Number(b.precio_frio.toString().replace(',', '.')) : null,
                 category: getBocadilloCategory(b.num_ingredientes),
-                image: b.image_url
+                image: b.image_url,
+                disponible: b.disponible
             };
             
             const lowerName = item.name.toLowerCase();
@@ -357,7 +358,8 @@ async function loadMenu() {
             price_caliente: Number(p.precio),
             price_frio: null,
             category: p.id_categoria === 1 ? 'bebidas' : (p.id_categoria === 2 ? 'extras' : 'salsas'), // Mapeo básico de categorías
-            image: p.image_url
+            image: p.image_url,
+            disponible: p.disponible
         }));
 
         menuItems = [...bFormatted, ...pFormatted];
@@ -391,7 +393,14 @@ function renderMenu() {
 
     menuGrid.innerHTML = paginatedItems.map(item => {
         let priceHTML = '';
-        if (item.price_frio) {
+        if (item.disponible === false) {
+            priceHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="price-tag" style="opacity: 0.5;">${item.price_frio ? `${item.price_frio.toFixed(2)}€ / ` : ''}${item.price_caliente.toFixed(2)}€</div>
+                    <span style="background: #ff4444; color: #fff; padding: 6px 12px; border-radius: 4px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);">Agotado</span>
+                </div>
+            `;
+        } else if (item.price_frio) {
             priceHTML = `
                 <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 255, 255, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--secondary);">
@@ -416,7 +425,7 @@ function renderMenu() {
         const imageHTML = item.image ? `<img src="${item.image}" class="bocadillo-img" alt="${item.name}">` : '';
 
         return `
-            <div class="bocadillo-card" data-id="${item.id}" data-type="${item.type}">
+            <div class="bocadillo-card ${item.disponible === false ? 'agotado' : ''}" data-id="${item.id}" data-type="${item.type}">
                 <div class="bocadillo-number">${item.number || ''}</div>
                 <h3>${item.name}</h3>
                 <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
@@ -465,7 +474,7 @@ window.goToPage = function(page) {
 // Cart Logic
 window.addToCart = function(event, type, id, temp = 'caliente') {
     const item = menuItems.find(i => i.type === type && i.id === id);
-    if (!item) return;
+    if (!item || item.disponible === false) return;
 
     const price = temp === 'frio' ? item.price_frio : item.price_caliente;
     const existing = cart.find(c => c.type === type && c.id === id && c.temp === temp);

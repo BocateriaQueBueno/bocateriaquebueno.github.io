@@ -351,6 +351,19 @@ header::after {
     box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
 }
 
+.bocadillo-card.agotado {
+    opacity: 0.55;
+    filter: grayscale(0.7);
+    border-color: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+}
+
+.bocadillo-card.agotado:hover {
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow);
+}
+
 .bocadillo-number {
     position: absolute;
     top: 10px;

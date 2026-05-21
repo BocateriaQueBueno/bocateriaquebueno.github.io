@@ -88,6 +88,9 @@ async function loadBocadillos() {
                 ${b.image_url ? `<br><img src="${b.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
             </div>
             <div>
+                <button class="action-btn ${b.disponible ? 'btn-disponible' : 'btn-no-disponible'}" onclick="toggleAvailability('bocadillo', ${b.id_bocadillo}, ${b.disponible})">
+                    ${b.disponible ? 'Disponible' : 'Agotado'}
+                </button>
                 <button class="action-btn btn-edit" onclick="openAddModal('bocadillo', ${b.id_bocadillo})">Editar</button>
                 <button class="action-btn btn-delete" onclick="deleteItem('bocadillo', ${b.id_bocadillo})">Eliminar</button>
             </div>
@@ -103,10 +106,13 @@ async function loadProductos() {
         <div class="admin-card">
             <div>
                 <strong>${p.nombre}</strong><br>
-                <small>${p.precio}€</small>
+                <small>${p.precio}€ | ${p.disponible ? 'Disponible' : 'Agotado'}</small>
                 ${p.image_url ? `<br><img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-top: 5px;">` : ''}
             </div>
             <div>
+                <button class="action-btn ${p.disponible ? 'btn-disponible' : 'btn-no-disponible'}" onclick="toggleAvailability('producto', ${p.id_producto}, ${p.disponible})">
+                    ${p.disponible ? 'Disponible' : 'Agotado'}
+                </button>
                 <button class="action-btn btn-edit" onclick="openAddModal('producto', ${p.id_producto})">Editar</button>
                 <button class="action-btn btn-delete" onclick="deleteItem('producto', ${p.id_producto})">Eliminar</button>
             </div>
@@ -162,6 +168,21 @@ async function deleteItem(table, id) {
     if (error) showToast('Error al borrar: ' + error.message, 'error');
     else {
         showToast('Eliminado correctamente', 'success');
+        loadData();
+    }
+}
+
+async function toggleAvailability(table, id, currentStatus) {
+    const idField = table === 'bocadillo' ? 'id_bocadillo' : 'id_producto';
+    const { error } = await supabaseClient
+        .from(table)
+        .update({ disponible: !currentStatus })
+        .eq(idField, id);
+        
+    if (error) {
+        showToast('Error al actualizar disponibilidad: ' + error.message, 'error');
+    } else {
+        showToast('Disponibilidad actualizada', 'success');
         loadData();
     }
 }
