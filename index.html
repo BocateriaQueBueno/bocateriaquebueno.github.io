@@ -58,6 +58,26 @@
             </div>
         </section>
 
+        <!-- Sección de Promociones (Slider/Carrusel) -->
+        <section class="promotions-section" id="promotions-section" style="display: none;">
+            <div class="promo-slider-container">
+                <div class="promo-slider" id="promo-slider">
+                    <!-- Se carga dinámicamente desde Supabase -->
+                </div>
+                
+                <!-- Botones de navegación del carrusel -->
+                <button class="slider-btn prev-btn" id="promo-prev-btn" aria-label="Promoción Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="slider-btn next-btn" id="promo-next-btn" aria-label="Siguiente Promoción">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <!-- Indicadores de posición (Dots) -->
+                <div class="slider-dots" id="promo-dots"></div>
+            </div>
+        </section>
+
         <section class="features" style="padding: 100px 10%; background: transparent;">
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; text-align: center;">

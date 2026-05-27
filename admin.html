@@ -205,6 +205,7 @@
             <button class="tab-btn active" onclick="showSection(event, 'bocadillos')">Bocadillos</button>
             <button class="tab-btn" onclick="showSection(event, 'productos')">Otros Productos</button>
             <button class="tab-btn" onclick="showSection(event, 'ingredientes')">Ingredientes</button>
+            <button class="tab-btn" onclick="showSection(event, 'promociones')">Promociones</button>
             <button class="tab-btn" onclick="showSection(event, 'clientes')">Clientes</button>
             <button class="tab-btn" onclick="showSection(event, 'pedidos')">Pedidos</button>
             <button class="tab-btn" onclick="showSection(event, 'horarios')">Horarios</button>
@@ -263,6 +264,14 @@
                 </div>
                 <hr style="border: 1px solid rgba(255,255,255,0.1);">
                 <button class="action-btn btn-disponible" onclick="saveHorarios()" style="width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 10px;">Guardar Horarios</button>
+            </div>
+        </section>
+
+        <!-- Section Promociones -->
+        <section id="promociones" class="admin-section">
+            <button class="action-btn btn-add" onclick="openAddModal('promocion')">+ Añadir Nueva Promoción</button>
+            <div id="admin-promociones-list">
+                <!-- Se carga dinámicamente -->
             </div>
         </section>
 

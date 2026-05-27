@@ -491,3 +491,35 @@ CREATE POLICY "Usuario ve sus pagos y admin ve todos" ON pago FOR SELECT USING (
 CREATE POLICY "Cualquiera puede insertar pagos" ON pago FOR INSERT WITH CHECK (true);
 CREATE POLICY "Admin edita pagos" ON pago FOR UPDATE USING (public.is_admin());
 CREATE POLICY "Admin borra pagos" ON pago FOR DELETE USING (public.is_admin());
+
+-- ------------------------------------------------------------
+-- 10. PROMOCION
+--     Tabla para guardar los banners promocionales deslizables
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.promocion (
+    id_promocion     SERIAL PRIMARY KEY,
+    titulo           VARCHAR(150)  NOT NULL,
+    descripcion      TEXT          DEFAULT NULL,
+    image_url        TEXT          NOT NULL,
+    disponible       BOOLEAN       NOT NULL DEFAULT TRUE,
+    orden            INT           NOT NULL DEFAULT 0,
+    created_at       TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE public.promocion ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de seguridad RLS
+CREATE POLICY "Lectura publica promocion" ON public.promocion FOR SELECT USING (true);
+CREATE POLICY "Admin todo promocion" ON public.promocion FOR ALL USING (public.is_admin());
+
+-- Inserción inicial
+INSERT INTO public.promocion (titulo, descripcion, image_url, disponible, orden)
+VALUES (
+    'Promoción Especial de Lanzamiento', 
+    '¡Prueba nuestros deliciosos bocadillos con ingredientes de primera calidad!', 
+    'promocion_prueba.jpg', 
+    true, 
+    1
+);
+

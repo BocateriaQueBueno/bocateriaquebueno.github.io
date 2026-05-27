@@ -93,6 +93,9 @@ const checkoutBtn = document.getElementById('checkout-btn');
 // Initialization
 async function init() {
     await loadConfiguracion();
+    if (document.getElementById('promotions-section')) {
+        await loadPromotions();
+    }
     if (menuGrid) {
         await loadMenu();
         renderMenu();
@@ -105,6 +108,130 @@ async function init() {
     checkActiveOrders();
     setInterval(checkActiveOrders, 20000);
 }
+
+// Carousel state
+let slideIndex = 0;
+let autoPlayInterval = null;
+
+async function loadPromotions() {
+    const promoSection = document.getElementById('promotions-section');
+    const promoSlider = document.getElementById('promo-slider');
+    const promoDotsContainer = document.getElementById('promo-dots');
+    
+    if (!promoSection || !promoSlider) return;
+
+    try {
+        const { data: promotions, error } = await supabaseClient
+            .from('promocion')
+            .select('*')
+            .eq('disponible', true)
+            .order('orden', { ascending: true });
+
+        if (error) throw error;
+
+        if (!promotions || promotions.length === 0) {
+            promoSection.style.display = 'none';
+            return;
+        }
+
+        // Render slides
+        promoSlider.innerHTML = promotions.map(p => `
+            <div class="promo-slide">
+                <img src="${p.image_url}" alt="${p.titulo}">
+                <div class="promo-overlay">
+                    <h2>${p.titulo}</h2>
+                    ${p.descripcion ? `<p>${p.descripcion}</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+
+        // Render dots
+        if (promoDotsContainer) {
+            promoDotsContainer.innerHTML = promotions.map((_, index) => `
+                <span class="dot ${index === 0 ? 'active' : ''}" onclick="currentSlide(${index})"></span>
+            `).join('');
+        }
+
+        // Show section
+        promoSection.style.display = 'block';
+
+        // Initialize Carousel
+        initCarousel(promotions.length);
+
+    } catch (e) {
+        console.error("Error al cargar las promociones:", e);
+        promoSection.style.display = 'none';
+    }
+}
+
+function initCarousel(slidesCount) {
+    const slider = document.getElementById('promo-slider');
+    const prevBtn = document.getElementById('promo-prev-btn');
+    const nextBtn = document.getElementById('promo-next-btn');
+
+    if (!slider) return;
+
+    function showSlide(index) {
+        if (index >= slidesCount) {
+            slideIndex = 0;
+        } else if (index < 0) {
+            slideIndex = slidesCount - 1;
+        } else {
+            slideIndex = index;
+        }
+
+        // Slide transform
+        slider.style.transform = `translateX(-${slideIndex * 100}%)`;
+
+        // Update dots
+        const dots = document.querySelectorAll('#promo-dots .dot');
+        dots.forEach((dot, idx) => {
+            if (idx === slideIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    window.currentSlide = function(index) {
+        showSlide(index);
+        resetAutoPlay();
+    };
+
+    if (prevBtn) {
+        prevBtn.onclick = () => {
+            showSlide(slideIndex - 1);
+            resetAutoPlay();
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            showSlide(slideIndex + 1);
+            resetAutoPlay();
+        };
+    }
+
+    // Auto Play
+    function startAutoPlay() {
+        if (slidesCount > 1) {
+            autoPlayInterval = setInterval(() => {
+                showSlide(slideIndex + 1);
+            }, 5000);
+        }
+    }
+
+    function resetAutoPlay() {
+        if (autoPlayInterval) {
+            clearInterval(autoPlayInterval);
+            startAutoPlay();
+        }
+    }
+
+    startAutoPlay();
+}
+
 
 async function loadConfiguracion() {
     try {

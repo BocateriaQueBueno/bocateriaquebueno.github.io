@@ -1123,3 +1123,175 @@ footer {
         padding: 100px 4% 60px;
     }
 }
+
+/* ============================================================
+   PROMOTIONS SLIDER/CAROUSEL
+   ============================================================ */
+.promotions-section {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.promo-slider-container {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    border: 2px solid var(--glass-border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 229, 255, 0.15);
+}
+
+.promo-slider {
+    display: flex;
+    width: 100%;
+    height: 450px;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.promo-slide {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.promo-slide img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+.promo-overlay {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 40px;
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.7) 60%, rgba(10, 10, 10, 0) 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.promo-overlay h2 {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 2.2rem;
+    color: var(--secondary);
+    text-shadow: 2px 2px 0px var(--primary);
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.promo-overlay p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    max-width: 800px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    margin-bottom: 5px;
+}
+
+/* Slider Controls */
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    z-index: 10;
+    transition: var(--transition);
+}
+
+.slider-btn:hover {
+    background: var(--secondary);
+    color: #000;
+    border-color: var(--secondary);
+    box-shadow: 0 0 15px var(--secondary);
+}
+
+.prev-btn {
+    left: 20px;
+}
+
+.next-btn {
+    right: 20px;
+}
+
+/* Dots pagination */
+.slider-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.dot.active {
+    background: var(--primary);
+    transform: scale(1.2);
+    box-shadow: 0 0 10px var(--primary);
+}
+
+/* Adaptación móvil */
+@media (max-width: 768px) {
+    .promo-slider {
+        height: 300px;
+    }
+    
+    .promo-overlay {
+        padding: 20px;
+    }
+    
+    .promo-overlay h2 {
+        font-size: 1.5rem;
+    }
+    
+    .promo-overlay p {
+        font-size: 0.9rem;
+    }
+    
+    .slider-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .prev-btn {
+        left: 10px;
+    }
+    
+    .next-btn {
+        right: 10px;
+    }
+}
+

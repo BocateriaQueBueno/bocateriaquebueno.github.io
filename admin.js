@@ -30,6 +30,7 @@ let currentEditType = null;
 let currentEditId = null;
 let allBocadillos = [];
 let allProductos = [];
+let allPromociones = [];
 let pedidosInterval = null;
 
 async function checkAdmin() {
@@ -73,6 +74,7 @@ async function loadData() {
     loadClientes();
     loadPedidos();
     loadConfiguracion();
+    loadPromociones();
     if (!pedidosInterval) {
         pedidosInterval = setInterval(loadPedidos, 30000); // 30 seconds
     }
@@ -293,7 +295,7 @@ async function loadClientes() {
 async function deleteItem(table, id) {
     if (!confirm('¿Estás seguro de eliminar este elemento?')) return;
     
-    const idField = table === 'bocadillo' ? 'id_bocadillo' : (table === 'producto' ? 'id_producto' : 'id_cliente');
+    const idField = table === 'bocadillo' ? 'id_bocadillo' : (table === 'producto' ? 'id_producto' : (table === 'promocion' ? 'id_promocion' : 'id_cliente'));
     
     const { error } = await supabaseClient.from(table).delete().eq(idField, id);
     if (error) showToast('Error al borrar: ' + error.message, 'error');
@@ -347,7 +349,7 @@ async function saveHorarios() {
 }
 
 async function toggleAvailability(table, id, currentStatus) {
-    const idField = table === 'bocadillo' ? 'id_bocadillo' : 'id_producto';
+    const idField = table === 'bocadillo' ? 'id_bocadillo' : (table === 'producto' ? 'id_producto' : 'id_promocion');
     const { error } = await supabaseClient
         .from(table)
         .update({ disponible: !currentStatus })
@@ -371,7 +373,9 @@ function openAddModal(type, id = null) {
     
     let item = null;
     if (id) {
-        item = type === 'bocadillo' ? allBocadillos.find(b => b.id_bocadillo === id) : allProductos.find(p => p.id_producto === id);
+        if (type === 'bocadillo') item = allBocadillos.find(b => b.id_bocadillo === id);
+        else if (type === 'producto') item = allProductos.find(p => p.id_producto === id);
+        else if (type === 'promocion') item = allPromociones.find(p => p.id_promocion === id);
     }
     
     if (type === 'bocadillo') {
@@ -412,6 +416,20 @@ function openAddModal(type, id = null) {
                 </select>
             </div>
         `;
+    } else if (type === 'promocion') {
+        fields.innerHTML = `
+            <div class="form-group"><label>Título</label><input type="text" id="f-title" value="${item?.titulo || ''}" required></div>
+            <div class="form-group"><label>Descripción (Opcional)</label><textarea id="f-desc" rows="3">${item?.descripcion || ''}</textarea></div>
+            <div class="form-group"><label>URL Imagen</label><input type="text" id="f-img" value="${item?.image_url || ''}" required></div>
+            <div class="form-group"><label>Orden de visualización</label><input type="number" id="f-order" value="${item?.orden ?? 0}" required></div>
+            <div class="form-group">
+                <label>Disponible / Activa</label>
+                <select id="f-disp">
+                    <option value="true" ${item?.disponible !== false ? 'selected' : ''}>Sí</option>
+                    <option value="false" ${item?.disponible === false ? 'selected' : ''}>No</option>
+                </select>
+            </div>
+        `;
     }
 }
 
@@ -439,11 +457,19 @@ document.getElementById('admin-form').onsubmit = async (e) => {
             image_url: document.getElementById('f-img').value || null,
             disponible: document.getElementById('f-disp').value === 'true'
         };
+    } else if (type === 'promocion') {
+        payload = {
+            titulo: document.getElementById('f-title').value,
+            descripcion: document.getElementById('f-desc').value || null,
+            image_url: document.getElementById('f-img').value,
+            orden: parseInt(document.getElementById('f-order').value) || 0,
+            disponible: document.getElementById('f-disp').value === 'true'
+        };
     }
 
     let error;
     if (currentEditId) {
-        const idField = type === 'bocadillo' ? 'id_bocadillo' : 'id_producto';
+        const idField = type === 'bocadillo' ? 'id_bocadillo' : (type === 'producto' ? 'id_producto' : 'id_promocion');
         const res = await supabaseClient.from(type).update(payload).eq(idField, currentEditId);
         error = res.error;
     } else {
@@ -558,6 +584,35 @@ document.getElementById('logout-btn').onclick = async () => {
     await supabaseClient.auth.signOut();
     window.location.href = 'index.html';
 };
+
+async function loadPromociones() {
+    const { data, error } = await supabaseClient.from('promocion').select('*').order('orden');
+    if (error) {
+        console.error('Error cargando promociones:', error);
+        return;
+    }
+    allPromociones = data || [];
+    const list = document.getElementById('admin-promociones-list');
+    if (!list) return;
+
+    list.innerHTML = allPromociones.map(p => `
+        <div class="admin-card">
+            <div>
+                <strong>${p.titulo}</strong><br>
+                <small>Orden: ${p.orden} | ${p.disponible ? 'Activa' : 'Desactivada'}</small>
+                ${p.descripcion ? `<br><small style="color: #aaa;">${p.descripcion}</small>` : ''}
+                ${p.image_url ? `<br><img src="${p.image_url}" style="max-width: 150px; max-height: 80px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.1);">` : ''}
+            </div>
+            <div>
+                <button class="action-btn ${p.disponible ? 'btn-disponible' : 'btn-no-disponible'}" onclick="toggleAvailability('promocion', ${p.id_promocion}, ${p.disponible})">
+                    ${p.disponible ? 'Activa' : 'Desactivada'}
+                </button>
+                <button class="action-btn btn-edit" onclick="openAddModal('promocion', ${p.id_promocion})">Editar</button>
+                <button class="action-btn btn-delete" onclick="deleteItem('promocion', ${p.id_promocion})">Eliminar</button>
+            </div>
+        </div>
+    `).join('');
+}
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (!session) window.location.href = 'index.html';
