@@ -419,6 +419,42 @@ header::after {
     box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
 }
 
+/* Hot-only (Caliente-solo) overrides */
+.bocadillo-card.caliente-solo {
+    border-color: rgba(255, 0, 127, 0.1);
+}
+
+.bocadillo-card.caliente-solo:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 30px rgba(255, 0, 127, 0.3);
+}
+
+.bocadillo-card.caliente-solo .bocadillo-number {
+    color: var(--primary);
+}
+
+.bocadillo-card.caliente-solo .price-tag {
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+}
+
+.bocadillo-card.caliente-solo .order-btn {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.bocadillo-card.caliente-solo .order-btn:hover {
+    background: var(--primary);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+}
+
+.bocadillo-card.caliente-solo .bocadillo-img {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+}
+
+
 /* Cart Float */
 .cart-float {
     position: fixed;

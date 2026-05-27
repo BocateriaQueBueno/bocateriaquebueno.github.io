@@ -594,16 +594,17 @@ function renderMenu() {
         } else {
             priceHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="price-tag">${item.price_caliente.toFixed(2)}€</div>
+                    <div class="price-tag">♨️ ${item.price_caliente.toFixed(2)}€</div>
                     <button class="order-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
                 </div>
             `;
         }
 
         const imageHTML = item.image ? `<img src="${item.image}" class="bocadillo-img" alt="${item.name}">` : '';
+        const colorClass = (!item.price_frio) ? 'caliente-solo' : '';
 
         return `
-            <div class="bocadillo-card ${item.disponible === false ? 'agotado' : ''}" data-id="${item.id}" data-type="${item.type}">
+            <div class="bocadillo-card ${item.disponible === false ? 'agotado' : ''} ${colorClass}" data-id="${item.id}" data-type="${item.type}">
                 <div class="bocadillo-number">${item.number || ''}</div>
                 <h3>${item.name}</h3>
                 <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
