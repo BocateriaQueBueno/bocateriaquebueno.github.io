@@ -5,7 +5,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Global Toast System
-window.showToast = function(message, type = 'info') {
+window.showToast = function (message, type = 'info') {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -20,7 +20,7 @@ window.showToast = function(message, type = 'info') {
         <button style="background:none; border:none; color:#fff; cursor:pointer; font-weight:bold; font-size:1.1rem; padding:0; line-height: 1;" onclick="this.parentElement.remove()">&times;</button>
     `;
     container.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.animation = 'fadeOut 0.5s ease-out forwards';
         setTimeout(() => toast.remove(), 500);
@@ -117,7 +117,7 @@ async function loadPromotions() {
     const promoSection = document.getElementById('promotions-section');
     const promoSlider = document.getElementById('promo-slider');
     const promoDotsContainer = document.getElementById('promo-dots');
-    
+
     if (!promoSection || !promoSlider) return;
 
     try {
@@ -195,7 +195,7 @@ function initCarousel(slidesCount) {
         });
     }
 
-    window.currentSlide = function(index) {
+    window.currentSlide = function (index) {
         showSlide(index);
         resetAutoPlay();
     };
@@ -247,40 +247,40 @@ async function loadConfiguracion() {
 
 function isShopOpen() {
     if (!configuracionTienda) return true; // Abierto por defecto si falla la carga
-    
+
     const now = new Date();
     const day = now.getDay(); // 0: Dom, 1: Lun ... 6: Sab
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTime = currentHour + currentMinute / 60.0;
-    
+
     const parseTime = (timeStr) => {
         if (!timeStr) return null;
         const [h, m] = timeStr.split(':');
         return parseInt(h) + parseInt(m) / 60.0;
     };
-    
+
     const h = configuracionTienda;
-    
+
     if (day >= 1 && day <= 5) { // Lunes a Viernes
         const mStart = parseTime(h.lv_manana_start);
         const mEnd = parseTime(h.lv_manana_end);
         const tStart = parseTime(h.lv_tarde_start);
         const tEnd = parseTime(h.lv_tarde_end);
-        
+
         const isManana = (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
         const isTarde = (tStart !== null && tEnd !== null) && (currentTime >= tStart && currentTime <= tEnd);
-        
+
         return isManana || isTarde;
     } else if (day === 6) { // Sabado
         const mStart = parseTime(h.sabado_start);
         const mEnd = parseTime(h.sabado_end);
-        
+
         return (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
     } else if (day === 0) { // Domingo
         const mStart = parseTime(h.domingo_start);
         const mEnd = parseTime(h.domingo_end);
-        
+
         return (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
     } else {
         return false;
@@ -290,12 +290,12 @@ function isShopOpen() {
 function setupCookies() {
     const cookieBanner = document.getElementById('cookie-banner');
     const acceptCookiesBtn = document.getElementById('accept-cookies');
-    
+
     if (cookieBanner && acceptCookiesBtn) {
         if (!localStorage.getItem('cookies_accepted')) {
             cookieBanner.style.display = 'flex';
         }
-        
+
         acceptCookiesBtn.addEventListener('click', () => {
             localStorage.setItem('cookies_accepted', 'true');
             cookieBanner.style.display = 'none';
@@ -314,7 +314,7 @@ function setupTracking() {
     const trackStatusText = document.getElementById('track-status-text');
     const trackPickupInfo = document.getElementById('track-pickup-info');
     const trackProgress = document.getElementById('track-progress');
-    
+
     const steps = {
         pendiente: document.getElementById('step-pendiente'),
         preparando: document.getElementById('step-preparando'),
@@ -369,12 +369,12 @@ function setupTracking() {
 
                 const pedido = data[0];
                 trackResult.style.display = 'block';
-                
+
                 // Actualizar textos
                 let statusMsg = '';
                 let pickupMsg = '';
                 let progressWidth = '0%';
-                
+
                 // Limpiar clases
                 Object.values(steps).forEach(step => {
                     step.classList.remove('active', 'completed');
@@ -449,7 +449,7 @@ async function checkActiveOrders() {
 
             if (data && data.length > 0) {
                 const pedido = data[0];
-                
+
                 // Si el pedido está entregado o cancelado, deja de ser activo
                 if (pedido.estado === 'entregado' || pedido.estado === 'cancelado') {
                     updatedCodes = updatedCodes.filter(c => c !== code);
@@ -525,7 +525,7 @@ async function loadMenu() {
                 image: b.image_url,
                 disponible: b.disponible
             };
-            
+
             return item;
         });
 
@@ -557,9 +557,9 @@ function getBocadilloCategory(num) {
 // Rendering
 function renderMenu() {
     if (!menuGrid) return;
-    
-    const filtered = currentFilter === 'all' 
-        ? menuItems 
+
+    const filtered = currentFilter === 'all'
+        ? menuItems
         : menuItems.filter(item => item.category === currentFilter);
 
     // Pagination Logic
@@ -643,14 +643,14 @@ function renderPagination(totalPages) {
     `;
 }
 
-window.goToPage = function(page) {
+window.goToPage = function (page) {
     currentPage = page;
     renderMenu();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // Cart Logic
-window.addToCart = function(event, type, id, temp = 'caliente') {
+window.addToCart = function (event, type, id, temp = 'caliente') {
     if (!isShopOpen()) {
         showToast('Lo sentimos, el establecimiento está cerrado en este momento.\\nPor favor, revisa nuestros horarios.', 'error');
         return;
@@ -661,15 +661,15 @@ window.addToCart = function(event, type, id, temp = 'caliente') {
 
     const price = temp === 'frio' ? item.price_frio : item.price_caliente;
     const existing = cart.find(c => c.type === type && c.id === id && c.temp === temp);
-    
+
     if (existing) {
         existing.quantity++;
     } else {
-        cart.push({ 
-            ...item, 
-            basePrice: price, 
-            price: price, 
-            temp: temp, 
+        cart.push({
+            ...item,
+            basePrice: price,
+            price: price,
+            temp: temp,
             quantity: 1,
             pan_obrador: false,
             selectedExtras: [] // Array para guardar los extras específicos
@@ -678,7 +678,7 @@ window.addToCart = function(event, type, id, temp = 'caliente') {
 
     saveCart();
     updateCartUI();
-    
+
     // Feedback animation
     const btn = event.target;
     const originalText = btn.innerText;
@@ -690,13 +690,13 @@ window.addToCart = function(event, type, id, temp = 'caliente') {
     }, 1000);
 };
 
-window.removeFromCart = function(index) {
+window.removeFromCart = function (index) {
     cart.splice(index, 1);
     saveCart();
     updateCartUI();
 };
 
-window.togglePanObrador = function(index) {
+window.togglePanObrador = function (index) {
     const item = cart[index];
     item.pan_obrador = !item.pan_obrador;
     recalculateItemPrice(index);
@@ -704,14 +704,14 @@ window.togglePanObrador = function(index) {
     updateCartUI();
 };
 
-window.addExtraToItem = function(itemIndex, extraId) {
+window.addExtraToItem = function (itemIndex, extraId) {
     if (!extraId) return;
     const item = cart[itemIndex];
-    
+
     // Buscar en la lista de la foto
     let extra = PHOTO_EXTRAS.salsas.find(s => s.id === extraId);
     if (!extra) extra = PHOTO_EXTRAS.extras.find(e => e.id === extraId);
-    
+
     if (extra) {
         item.selectedExtras.push({
             id: extra.id,
@@ -724,7 +724,7 @@ window.addExtraToItem = function(itemIndex, extraId) {
     }
 };
 
-window.removeExtraFromItem = function(itemIndex, extraIndex) {
+window.removeExtraFromItem = function (itemIndex, extraIndex) {
     cart[itemIndex].selectedExtras.splice(extraIndex, 1);
     recalculateItemPrice(itemIndex);
     saveCart();
@@ -734,17 +734,17 @@ window.removeExtraFromItem = function(itemIndex, extraIndex) {
 function recalculateItemPrice(index) {
     const item = cart[index];
     let extraTotal = 0;
-    
+
     if (item.pan_obrador) extraTotal += EXTRAS.pan_obrador.price;
-    
+
     item.selectedExtras.forEach(e => {
         extraTotal += e.price;
     });
-    
+
     item.price = item.basePrice + extraTotal;
 }
 
-window.clearCart = function() {
+window.clearCart = function () {
     if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
         cart = [];
         saveCart();
@@ -831,7 +831,7 @@ function updateCartUI() {
 // Event Listeners
 function setupFilters() {
     if (!categoryFilters) return;
-    
+
     categoryFilters.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-btn')) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -858,22 +858,22 @@ window.onclick = (e) => {
     if (e.target === cartModal) cartModal.style.display = 'none';
 };
 
-    if (checkoutBtn) {
-        checkoutBtn.onclick = async () => {
-            if (cart.length === 0) return showToast('El carrito está vacío', 'error');
-            
-            const pickupTime = document.getElementById('pickup-time').value;
-            if (!pickupTime) {
-                showToast('Por favor, indica la hora a la que vendrás a recoger tu pedido.', 'error');
-                return;
-            }
+if (checkoutBtn) {
+    checkoutBtn.onclick = async () => {
+        if (cart.length === 0) return showToast('El carrito está vacío', 'error');
+
+        const pickupTime = document.getElementById('pickup-time').value;
+        if (!pickupTime) {
+            showToast('Por favor, indica la hora a la que vendrás a recoger tu pedido.', 'error');
+            return;
+        }
 
         checkoutBtn.disabled = true;
         checkoutBtn.innerText = 'Procesando...';
 
         try {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
+
             // Recopilar extras para las notas del pedido
             const notasExtras = cart.map(item => {
                 if (item.selectedExtras && item.selectedExtras.length > 0) {
@@ -913,12 +913,12 @@ window.onclick = (e) => {
                     codigo_recogida: codigoRecogida
                 }])
                 .select();
-                
+
             if (pedidoError) throw pedidoError;
             if (!pedidoData || pedidoData.length === 0) throw new Error('No se pudo recuperar la información del pedido tras la inserción.');
-            
+
             const idPedido = pedidoData[0].id_pedido;
-            
+
             // 2. Insert into linea_pedido
             const lineas = cart.map(item => {
                 const linea = {
@@ -930,7 +930,7 @@ window.onclick = (e) => {
                     pan_obrador: false,
                     con_salsa: false
                 };
-                
+
                 if (item.type === 'bocadillo') {
                     linea.id_bocadillo = item.id;
                     linea.temperatura = item.temp;
@@ -943,23 +943,23 @@ window.onclick = (e) => {
                 } else {
                     linea.id_producto = item.id;
                 }
-                
+
                 return linea;
             });
-            
+
             const { error: lineasError } = await supabaseClient
                 .from('linea_pedido')
                 .insert(lineas);
-                
+
             if (lineasError) throw lineasError;
-            
+
             let msg = '¡Gracias por tu pedido!\n\n';
             if (currentUser && currentUser.user_metadata.full_name) {
                 msg = `¡Gracias por tu pedido, ${currentUser.user_metadata.full_name.split(' ')[0]}!\n\n`;
             }
             msg += `Tu código de recogida es: **${codigoRecogida}**\n\n`;
             msg += 'Guarda este código. Te esperamos en la tienda a las ' + pickupTime + ' para recogerlo y realizar el pago.';
-            
+
             // Guardar el código en localStorage para seguimiento activo
             let activeCodes = JSON.parse(localStorage.getItem('active_orders') || '[]');
             activeCodes.push(codigoRecogida);
@@ -1005,7 +1005,7 @@ function setupAuth() {
     // Toggle Modal
     openAuthBtn.onclick = () => authModal.style.display = 'flex';
     if (closeAuthBtn) closeAuthBtn.onclick = () => authModal.style.display = 'none';
-    
+
     const closeAuthModalSpan = document.getElementById('close-auth-modal');
     if (closeAuthModalSpan) closeAuthModalSpan.onclick = () => authModal.style.display = 'none';
 
@@ -1084,7 +1084,7 @@ function setupAuth() {
                         es_registrado: true,
                         fecha_registro: new Date().toISOString()
                     }]);
-                
+
                 if (dbError) console.error('Error syncing to public.cliente:', dbError);
 
                 showToast('¡Registro iniciado! Por favor, revisa tu correo electrónico para verificar tu cuenta antes de entrar.', 'success');
@@ -1119,7 +1119,7 @@ function setupAuth() {
         resetForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('reset-email').value;
-            
+
             const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
                 redirectTo: window.location.origin + '/index.html',
             });
@@ -1160,7 +1160,7 @@ function updateAuthUI() {
         authNav.style.display = 'none';
         userNav.style.display = 'flex';
         userNav.style.alignItems = 'center';
-        
+
         // Verificar si es admin para mostrar el link al panel
         checkAdminStatus();
 
@@ -1168,7 +1168,7 @@ function updateAuthUI() {
     } else {
         authNav.style.display = 'block';
         userNav.style.display = 'none';
-        
+
         // Quitar link de admin si existe
         const adminLink = document.getElementById('admin-nav-link');
         if (adminLink) adminLink.remove();
@@ -1177,13 +1177,13 @@ function updateAuthUI() {
 
 async function checkAdminStatus() {
     if (!currentUser) return;
-    
+
     const { data: profile } = await supabaseClient
         .from('cliente')
         .select('es_admin')
         .eq('email', currentUser.email)
         .single();
-    
+
     if (profile && profile.es_admin) {
         // Añadir link al panel si no existe
         if (!document.getElementById('admin-nav-link')) {
