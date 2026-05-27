@@ -328,6 +328,8 @@ async function loadConfiguracion() {
     document.getElementById('lv_tarde_end').value = h.lv_tarde_end || '';
     document.getElementById('sabado_start').value = h.sabado_start || '';
     document.getElementById('sabado_end').value = h.sabado_end || '';
+    document.getElementById('domingo_start').value = h.domingo_start || '';
+    document.getElementById('domingo_end').value = h.domingo_end || '';
 }
 
 async function saveHorarios() {
@@ -337,7 +339,9 @@ async function saveHorarios() {
         lv_tarde_start: document.getElementById('lv_tarde_start').value,
         lv_tarde_end: document.getElementById('lv_tarde_end').value,
         sabado_start: document.getElementById('sabado_start').value,
-        sabado_end: document.getElementById('sabado_end').value
+        sabado_end: document.getElementById('sabado_end').value,
+        domingo_start: document.getElementById('domingo_start').value,
+        domingo_end: document.getElementById('domingo_end').value
     };
     
     const { error } = await supabaseClient.from('configuracion').update({ horarios: horarios }).eq('id', 1);
@@ -420,7 +424,14 @@ function openAddModal(type, id = null) {
         fields.innerHTML = `
             <div class="form-group"><label>Título</label><input type="text" id="f-title" value="${item?.titulo || ''}" required></div>
             <div class="form-group"><label>Descripción (Opcional)</label><textarea id="f-desc" rows="3">${item?.descripcion || ''}</textarea></div>
-            <div class="form-group"><label>URL Imagen</label><input type="text" id="f-img" value="${item?.image_url || ''}" required></div>
+            <div class="form-group">
+                <label>URL de la Imagen</label>
+                <input type="text" id="f-img" value="${item?.image_url || ''}" placeholder="https://ejemplo.com/imagen.jpg" required oninput="previewPromoImg(this.value)">
+                <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;display:block;">Pega cualquier URL pública de imagen (Google Drive, Instagram, Cloudinary, etc.)</small>
+                <div id="promo-img-preview" style="margin-top:10px;text-align:center;">
+                    ${item?.image_url ? `<img src="${item.image_url}" alt="Vista previa" style="max-height:160px;max-width:100%;object-fit:contain;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">` : ''}
+                </div>
+            </div>
             <div class="form-group"><label>Orden de visualización</label><input type="number" id="f-order" value="${item?.orden ?? 0}" required></div>
             <div class="form-group">
                 <label>Disponible / Activa</label>
@@ -580,6 +591,18 @@ function closeAdminModal() {
     document.getElementById('admin-modal').style.display = 'none';
 }
 
+function previewPromoImg(url) {
+    const previewContainer = document.getElementById('promo-img-preview');
+    if (!previewContainer) return;
+    
+    if (url && url.trim() !== '') {
+        previewContainer.innerHTML = `<img src="${url}" alt="Vista previa" style="max-height:160px;max-width:100%;object-fit:contain;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" onerror="this.parentElement.innerHTML='<span style=\\'color:#ff4444;font-size:0.9rem;\\'>Error al cargar la imagen. Comprueba la URL.</span>'">`;
+    } else {
+        previewContainer.innerHTML = '';
+    }
+}
+
+
 document.getElementById('logout-btn').onclick = async () => {
     await supabaseClient.auth.signOut();
     window.location.href = 'index.html';
@@ -601,7 +624,7 @@ async function loadPromociones() {
                 <strong>${p.titulo}</strong><br>
                 <small>Orden: ${p.orden} | ${p.disponible ? 'Activa' : 'Desactivada'}</small>
                 ${p.descripcion ? `<br><small style="color: #aaa;">${p.descripcion}</small>` : ''}
-                ${p.image_url ? `<br><img src="${p.image_url}" style="max-width: 150px; max-height: 80px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.1);">` : ''}
+                ${p.image_url ? `<br><img src="${p.image_url}" style="max-width: 150px; max-height: 80px; object-fit: contain; background: #000; border-radius: 4px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.1);">` : ''}
             </div>
             <div>
                 <button class="action-btn ${p.disponible ? 'btn-disponible' : 'btn-no-disponible'}" onclick="toggleAvailability('promocion', ${p.id_promocion}, ${p.disponible})">

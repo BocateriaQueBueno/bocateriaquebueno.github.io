@@ -137,7 +137,8 @@ async function loadPromotions() {
         // Render slides
         promoSlider.innerHTML = promotions.map(p => `
             <div class="promo-slide">
-                <img src="${p.image_url}" alt="${p.titulo}">
+                <img src="${p.image_url}" class="promo-bg-blur" alt="">
+                <img src="${p.image_url}" class="promo-main-img" alt="${p.titulo}">
                 <div class="promo-overlay">
                     <h2>${p.titulo}</h2>
                     ${p.descripcion ? `<p>${p.descripcion}</p>` : ''}
@@ -276,8 +277,13 @@ function isShopOpen() {
         const mEnd = parseTime(h.sabado_end);
         
         return (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
+    } else if (day === 0) { // Domingo
+        const mStart = parseTime(h.domingo_start);
+        const mEnd = parseTime(h.domingo_end);
+        
+        return (mStart !== null && mEnd !== null) && (currentTime >= mStart && currentTime <= mEnd);
     } else {
-        return false; // Domingo o sin configurar
+        return false;
     }
 }
 
