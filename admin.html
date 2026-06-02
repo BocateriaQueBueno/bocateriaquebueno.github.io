@@ -206,6 +206,7 @@
             <button class="tab-btn" onclick="showSection(event, 'productos')">Otros Productos</button>
             <button class="tab-btn" onclick="showSection(event, 'ingredientes')">Ingredientes</button>
             <button class="tab-btn" onclick="showSection(event, 'promociones')">Promociones</button>
+            <button class="tab-btn" onclick="showSection(event, 'categorias')">Categorías</button>
             <button class="tab-btn" onclick="showSection(event, 'clientes')">Clientes</button>
             <button class="tab-btn" onclick="showSection(event, 'pedidos')">Pedidos</button>
             <button class="tab-btn" onclick="showSection(event, 'horarios')">Horarios</button>
@@ -281,6 +282,14 @@
         <section id="promociones" class="admin-section">
             <button class="action-btn btn-add" onclick="openAddModal('promocion')">+ Añadir Nueva Promoción</button>
             <div id="admin-promociones-list">
+                <!-- Se carga dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Section Categorías -->
+        <section id="categorias" class="admin-section">
+            <button class="action-btn btn-add" onclick="openAddModal('categoria')">+ Añadir Nueva Categoría</button>
+            <div id="admin-categorias-list">
                 <!-- Se carga dinámicamente -->
             </div>
         </section>

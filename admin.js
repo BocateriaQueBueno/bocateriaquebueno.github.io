@@ -31,6 +31,7 @@ let currentEditId = null;
 let allBocadillos = [];
 let allProductos = [];
 let allPromociones = [];
+let allCategorias = [];
 let pedidosInterval = null;
 
 async function checkAdmin() {
@@ -71,6 +72,7 @@ async function loadData() {
     loadBocadillos();
     loadProductos();
     loadIngredientes();
+    loadCategorias();
     loadClientes();
     loadPedidos();
     loadConfiguracion();
@@ -253,6 +255,25 @@ async function loadProductos() {
     `).join('');
 }
 
+async function loadCategorias() {
+    const { data } = await supabaseClient.from('categoria').select('*').order('id_categoria');
+    allCategorias = data || [];
+    const list = document.getElementById('admin-categorias-list');
+    if (!list) return;
+    list.innerHTML = allCategorias.map(c => `
+        <div class="admin-card">
+            <div>
+                <strong>${c.nombre}</strong><br>
+                <small style="color: #aaa;">${c.descripcion || 'Sin descripción'}</small>
+            </div>
+            <div>
+                <button class="action-btn btn-edit" onclick="openAddModal('categoria', ${c.id_categoria})">Editar</button>
+                <button class="action-btn btn-delete" onclick="deleteItem('categoria', ${c.id_categoria})">Eliminar</button>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function loadClientes() {
     const { data, error } = await supabaseClient.from('cliente').select('*, pedido(*)');
     if (error) {
@@ -295,7 +316,7 @@ async function loadClientes() {
 async function deleteItem(table, id) {
     if (!confirm('¿Estás seguro de eliminar este elemento?')) return;
     
-    const idField = table === 'bocadillo' ? 'id_bocadillo' : (table === 'producto' ? 'id_producto' : (table === 'promocion' ? 'id_promocion' : 'id_cliente'));
+    const idField = table === 'bocadillo' ? 'id_bocadillo' : (table === 'producto' ? 'id_producto' : (table === 'promocion' ? 'id_promocion' : (table === 'categoria' ? 'id_categoria' : 'id_cliente')));
     
     const { error } = await supabaseClient.from(table).delete().eq(idField, id);
     if (error) showToast('Error al borrar: ' + error.message, 'error');
@@ -380,6 +401,7 @@ function openAddModal(type, id = null) {
         if (type === 'bocadillo') item = allBocadillos.find(b => b.id_bocadillo === id);
         else if (type === 'producto') item = allProductos.find(p => p.id_producto === id);
         else if (type === 'promocion') item = allPromociones.find(p => p.id_promocion === id);
+        else if (type === 'categoria') item = allCategorias.find(c => c.id_categoria === id);
     }
     
     if (type === 'bocadillo') {
@@ -405,10 +427,7 @@ function openAddModal(type, id = null) {
             <div class="form-group">
                 <label>Categoría</label>
                 <select id="f-cat" required>
-                    <option value="1" ${item?.id_categoria === 1 ? 'selected' : ''}>Bebidas</option>
-                    <option value="2" ${item?.id_categoria === 2 ? 'selected' : ''}>Patatas / Snacks</option>
-                    <option value="3" ${item?.id_categoria === 3 ? 'selected' : ''}>Dulces / Postres</option>
-                    <option value="4" ${item?.id_categoria === 4 ? 'selected' : ''}>Otros</option>
+                    ${allCategorias.map(c => `<option value="${c.id_categoria}" ${item?.id_categoria === c.id_categoria ? 'selected' : ''}>${c.nombre}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group"><label>URL Imagen (Opcional)</label><input type="text" id="f-img" value="${item?.image_url || ''}"></div>
@@ -440,6 +459,11 @@ function openAddModal(type, id = null) {
                     <option value="false" ${item?.disponible === false ? 'selected' : ''}>No</option>
                 </select>
             </div>
+        `;
+    } else if (type === 'categoria') {
+        fields.innerHTML = `
+            <div class="form-group"><label>Nombre de la Categoría</label><input type="text" id="f-name" value="${item?.nombre || ''}" required></div>
+            <div class="form-group"><label>Descripción (Opcional)</label><textarea id="f-desc" rows="3">${item?.descripcion || ''}</textarea></div>
         `;
     }
 }
@@ -476,11 +500,16 @@ document.getElementById('admin-form').onsubmit = async (e) => {
             orden: parseInt(document.getElementById('f-order').value) || 0,
             disponible: document.getElementById('f-disp').value === 'true'
         };
+    } else if (type === 'categoria') {
+        payload = {
+            nombre: document.getElementById('f-name').value,
+            descripcion: document.getElementById('f-desc').value || null
+        };
     }
 
     let error;
     if (currentEditId) {
-        const idField = type === 'bocadillo' ? 'id_bocadillo' : (type === 'producto' ? 'id_producto' : 'id_promocion');
+        const idField = type === 'bocadillo' ? 'id_bocadillo' : (type === 'producto' ? 'id_producto' : (type === 'promocion' ? 'id_promocion' : 'id_categoria'));
         const res = await supabaseClient.from(type).update(payload).eq(idField, currentEditId);
         error = res.error;
     } else {
@@ -501,7 +530,7 @@ async function loadPedidos() {
         .from('pedido')
         .select('*, cliente(nombre, telefono), linea_pedido(*, bocadillo(nombre), producto(nombre))')
         .order('fecha_hora', { ascending: false })
-        .limit(50);
+        .limit(200);
         
     if (error) {
         console.error('Error loading pedidos', error);
@@ -510,69 +539,117 @@ async function loadPedidos() {
     
     const list = document.getElementById('admin-pedidos-list');
     if (!list) return;
+
+    const pedidosPorFecha = new Map();
     
-    list.innerHTML = data.map(p => {
-        let statusColor = '#888';
-        if (p.estado === 'preparando') statusColor = '#ffb703';
-        if (p.estado === 'listo' || p.estado === 'entregado') statusColor = '#2a9d8f';
-        if (p.estado === 'cancelado') statusColor = '#e63946';
+    data.forEach(p => {
+        const dateKey = new Date(p.fecha_hora).toLocaleDateString('es-ES');
+        if (!pedidosPorFecha.has(dateKey)) {
+            pedidosPorFecha.set(dateKey, []);
+        }
+        pedidosPorFecha.get(dateKey).push(p);
+    });
 
-        const clientName = p.cliente ? p.cliente.nombre : 'Cliente Anónimo';
-        const clientPhone = p.cliente ? p.cliente.telefono : '';
-        const waLink = clientPhone ? `https://wa.me/34${clientPhone.trim().replace(/\s+/g, '')}?text=¡Hola%20${encodeURIComponent(clientName.split(' ')[0])}!%20Tu%20pedido%20con%20código%20*${p.codigo_recogida || ''}*%20ya%20está%20listo%20para%20recoger%20en%20Bocatería%20Qué%20Bueno.%20¡Te%20esperamos!` : '';
+    const todayDateKey = new Date().toLocaleDateString('es-ES');
+    
+    let html = '';
+    
+    for (const [dateKey, pedidos] of pedidosPorFecha.entries()) {
+        const isToday = dateKey === todayDateKey;
+        const displayStyle = isToday ? 'block' : 'none';
+        const iconClass = isToday ? 'fa-chevron-up' : 'fa-chevron-down';
+        
+        const groupHtml = pedidos.map(p => {
+            let statusColor = '#888';
+            if (p.estado === 'preparando') statusColor = '#ffb703';
+            if (p.estado === 'listo' || p.estado === 'entregado') statusColor = '#2a9d8f';
+            if (p.estado === 'cancelado') statusColor = '#e63946';
 
-        const lineas = p.linea_pedido || [];
-        const itemsHtml = lineas.map(l => {
-            const name = l.tipo_item === 'bocadillo' 
-                ? (l.bocadillo ? l.bocadillo.nombre : 'Bocadillo') 
-                : (l.producto ? l.producto.nombre : 'Producto');
-            
-            const details = [];
-            if (l.tipo_item === 'bocadillo') {
-                if (l.temperatura) details.push(l.temperatura === 'caliente' ? '🔥 Caliente' : '❄️ Frío');
-                if (l.pan_obrador) details.push('🥖 Pan Obrador (+0.30€)');
-                if (l.con_salsa) details.push('🍯 Con Salsa');
-            }
-            
-            const detailsStr = details.length > 0 ? ` <span style="font-size: 0.8rem; color: var(--secondary);">(${details.join(', ')})</span>` : '';
-            return `<div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: #fff;">
-                <strong>x${l.cantidad}</strong> ${name}${detailsStr} - <span style="color: #aaa;">${Number(l.precio_unitario).toFixed(2)}€/ud</span>
-            </div>`;
+            const clientName = p.cliente ? p.cliente.nombre : 'Cliente Anónimo';
+            const clientPhone = p.cliente ? p.cliente.telefono : '';
+            const waLink = clientPhone ? `https://wa.me/34${clientPhone.trim().replace(/\s+/g, '')}?text=¡Hola%20${encodeURIComponent(clientName.split(' ')[0])}!%20Tu%20pedido%20con%20código%20*${p.codigo_recogida || ''}*%20ya%20está%20listo%20para%20recoger%20en%20Bocatería%20Qué%20Bueno.%20¡Te%20esperamos!` : '';
+
+            const lineas = p.linea_pedido || [];
+            const itemsHtml = lineas.map(l => {
+                const name = l.tipo_item === 'bocadillo' 
+                    ? (l.bocadillo ? l.bocadillo.nombre : 'Bocadillo') 
+                    : (l.producto ? l.producto.nombre : 'Producto');
+                
+                const details = [];
+                if (l.tipo_item === 'bocadillo') {
+                    if (l.temperatura) details.push(l.temperatura === 'caliente' ? '🔥 Caliente' : '❄️ Frío');
+                    if (l.pan_obrador) details.push('🥖 Pan Obrador (+0.30€)');
+                    if (l.con_salsa) details.push('🍯 Con Salsa');
+                }
+                
+                const detailsStr = details.length > 0 ? ` <span style="font-size: 0.8rem; color: var(--secondary);">(${details.join(', ')})</span>` : '';
+                return `<div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: #fff;">
+                    <strong>x${l.cantidad}</strong> ${name}${detailsStr} - <span style="color: #aaa;">${Number(l.precio_unitario).toFixed(2)}€/ud</span>
+                </div>`;
+            }).join('');
+
+            return `
+                <div class="admin-card" style="border-left: 4px solid ${statusColor}; flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <div>
+                            <strong>Pedido #${p.id_pedido}</strong> - <span style="color: ${statusColor}; text-transform: uppercase; font-size: 0.8rem; font-weight: 900;">${p.estado}</span>
+                            <div style="margin-top: 5px;"><strong style="background: var(--primary); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.9rem; letter-spacing: 1px;">CÓDIGO: ${p.codigo_recogida || 'N/A'}</strong></div>
+                            <div style="font-size: 0.85rem; color: #aaa; margin-top: 5px;">${new Date(p.fecha_hora).toLocaleString()} | ${p.tipo === 'local' ? 'En Local' : 'Para Llevar'} ${p.hora_recogida ? `(Recoger: ${p.hora_recogida})` : ''}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="color: var(--primary); font-size: 1.2rem;">${p.total}€</strong>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 0.9rem; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 6px; width: 100%; display: flex; flex-direction: column; gap: 6px;">
+                        <div>👤 <strong>${clientName}</strong> ${clientPhone ? `(${clientPhone}) <a href="https://wa.me/34${clientPhone.trim().replace(/\s+/g, '')}" target="_blank" style="color: #25D366; margin-left: 8px; font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center; vertical-align: middle;" title="Abrir chat de WhatsApp"><i class="fab fa-whatsapp"></i></a>` : ''}</div>
+                        
+                        <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <strong style="color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">🥪 Artículos a preparar:</strong>
+                            <div style="margin-top: 5px;">${itemsHtml || '<span style="color:#888;">Sin detalles de artículos</span>'}</div>
+                        </div>
+                        
+                        ${p.notas ? `<div style="margin-top: 5px; color: #ccc; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">📝 <strong>Notas/Extras:</strong> ${p.notas}</div>` : ''}
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center; width: 100%; flex-wrap: wrap;">
+                        ${p.estado === 'pendiente' ? `<button class="action-btn" style="background: #ffb703; color: #000;" onclick="updatePedidoStatus(${p.id_pedido}, 'preparando')">Marcar En Marcha</button>` : ''}
+                        ${p.estado === 'preparando' ? `<button class="action-btn" style="background: #2a9d8f; color: #fff;" onclick="updatePedidoStatus(${p.id_pedido}, 'completado')">Marcar Completado</button>` : ''}
+                        ${p.estado !== 'cancelado' && p.estado !== 'entregado' && p.estado !== 'listo' ? `<button class="action-btn btn-delete" onclick="updatePedidoStatus(${p.id_pedido}, 'cancelado')">Cancelar</button>` : ''}
+                        ${clientPhone && p.estado === 'preparando' ? `<a href="${waLink}" target="_blank" class="action-btn" style="background: #25D366; color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border-radius: 4px; padding: 6px 12px; font-weight: 700; font-size: 0.85rem;"><i class="fab fa-whatsapp" style="font-size: 1rem;"></i> Avisar</a>` : ''}
+                    </div>
+                </div>
+            `;
         }).join('');
-
-        return `
-            <div class="admin-card" style="border-left: 4px solid ${statusColor}; flex-direction: column; align-items: flex-start; gap: 10px;">
-                <div style="display: flex; justify-content: space-between; width: 100%;">
-                    <div>
-                        <strong>Pedido #${p.id_pedido}</strong> - <span style="color: ${statusColor}; text-transform: uppercase; font-size: 0.8rem; font-weight: 900;">${p.estado}</span>
-                        <div style="margin-top: 5px;"><strong style="background: var(--primary); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.9rem; letter-spacing: 1px;">CÓDIGO: ${p.codigo_recogida || 'N/A'}</strong></div>
-                        <div style="font-size: 0.85rem; color: #aaa; margin-top: 5px;">${new Date(p.fecha_hora).toLocaleString()} | ${p.tipo === 'local' ? 'En Local' : 'Para Llevar'} ${p.hora_recogida ? `(Recoger: ${p.hora_recogida})` : ''}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <strong style="color: var(--primary); font-size: 1.2rem;">${p.total}€</strong>
-                    </div>
+        
+        html += `
+            <div class="date-group-container" style="margin-bottom: 20px;">
+                <div class="date-group-header" onclick="toggleDateGroup(this)" style="background: var(--card-bg); padding: 15px 20px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="margin: 0; color: var(--secondary);">${isToday ? 'Hoy (' + dateKey + ')' : dateKey} <span style="font-size: 0.9rem; color: #888;">(${pedidos.length} pedidos)</span></h3>
+                    <i class="fas ${iconClass}"></i>
                 </div>
-                
-                <div style="font-size: 0.9rem; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 6px; width: 100%; display: flex; flex-direction: column; gap: 6px;">
-                    <div>👤 <strong>${clientName}</strong> ${clientPhone ? `(${clientPhone}) <a href="https://wa.me/34${clientPhone.trim().replace(/\s+/g, '')}" target="_blank" style="color: #25D366; margin-left: 8px; font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center; vertical-align: middle;" title="Abrir chat de WhatsApp"><i class="fab fa-whatsapp"></i></a>` : ''}</div>
-                    
-                    <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                        <strong style="color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">🥪 Artículos a preparar:</strong>
-                        <div style="margin-top: 5px;">${itemsHtml || '<span style="color:#888;">Sin detalles de artículos</span>'}</div>
-                    </div>
-                    
-                    ${p.notas ? `<div style="margin-top: 5px; color: #ccc; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">📝 <strong>Notas/Extras:</strong> ${p.notas}</div>` : ''}
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center; width: 100%; flex-wrap: wrap;">
-                    ${p.estado === 'pendiente' ? `<button class="action-btn" style="background: #ffb703; color: #000;" onclick="updatePedidoStatus(${p.id_pedido}, 'preparando')">Marcar En Marcha</button>` : ''}
-                    ${p.estado === 'preparando' ? `<button class="action-btn" style="background: #2a9d8f; color: #fff;" onclick="updatePedidoStatus(${p.id_pedido}, 'completado')">Marcar Completado</button>` : ''}
-                    ${p.estado !== 'cancelado' && p.estado !== 'entregado' && p.estado !== 'listo' ? `<button class="action-btn btn-delete" onclick="updatePedidoStatus(${p.id_pedido}, 'cancelado')">Cancelar</button>` : ''}
-                    ${clientPhone && p.estado === 'preparando' ? `<a href="${waLink}" target="_blank" class="action-btn" style="background: #25D366; color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border-radius: 4px; padding: 6px 12px; font-weight: 700; font-size: 0.85rem;"><i class="fab fa-whatsapp" style="font-size: 1rem;"></i> Avisar</a>` : ''}
+                <div class="date-group-content" style="display: ${displayStyle}; padding-top: 15px;">
+                    ${groupHtml}
                 </div>
             </div>
         `;
-    }).join('');
+    }
+    
+    list.innerHTML = html;
+}
+
+window.toggleDateGroup = function(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('i');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
 }
 
 async function updatePedidoStatus(id, estadoUI) {

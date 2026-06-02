@@ -500,6 +500,8 @@ async function checkActiveOrders() {
 // Data Fetching
 async function loadMenu() {
     try {
+        const { data: categorias, error: cError } = await supabaseClient.from('categoria').select('*').order('id_categoria');
+        
         const { data: bocadillos, error: bError } = await supabaseClient
             .from('bocadillo')
             .select('*')
@@ -509,7 +511,7 @@ async function loadMenu() {
             .from('producto')
             .select('*');
 
-        if (bError || pError) throw bError || pError;
+        if (bError || pError || cError) throw bError || pError || cError;
 
         // Map items to a common format
         const bFormatted = bocadillos.map((b, index) => {
@@ -529,18 +531,42 @@ async function loadMenu() {
             return item;
         });
 
-        const pFormatted = productos.map(p => ({
-            id: p.id_producto,
-            type: 'producto',
-            name: p.nombre,
-            price_caliente: Number(p.precio),
-            price_frio: null,
-            category: p.id_categoria === 1 ? 'bebidas' : (p.id_categoria === 2 ? 'extras' : 'salsas'), // Mapeo básico de categorías
-            image: p.image_url,
-            disponible: p.disponible
-        }));
+        const pFormatted = productos.map(p => {
+            const cat = categorias.find(c => c.id_categoria === p.id_categoria);
+            const catName = cat ? cat.nombre : 'Otros';
+            return {
+                id: p.id_producto,
+                type: 'producto',
+                name: p.nombre,
+                price_caliente: Number(p.precio),
+                price_frio: null,
+                category: catName.toLowerCase().replace(/\s+/g, '_'),
+                image: p.image_url,
+                disponible: p.disponible
+            };
+        });
 
         menuItems = [...bFormatted, ...pFormatted];
+
+        if (categoryFilters && categorias) {
+            let html = `
+                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-category="all">Todos</button>
+                <button class="filter-btn ${currentFilter === '1' ? 'active' : ''}" data-category="1">1 Ingrediente</button>
+                <button class="filter-btn ${currentFilter === '2' ? 'active' : ''}" data-category="2">2 Ingredientes</button>
+                <button class="filter-btn ${currentFilter === '3' ? 'active' : ''}" data-category="3">3 Ingredientes</button>
+                <button class="filter-btn ${currentFilter === '4+' ? 'active' : ''}" data-category="4+">Especiales</button>
+            `;
+            categorias.forEach(c => {
+                const catKey = c.nombre.toLowerCase().replace(/\s+/g, '_');
+                // Verificar si hay algún producto activo que pertenezca a esta categoría
+                const hasProducts = pFormatted.some(p => p.category === catKey && p.disponible);
+                
+                if (hasProducts) {
+                    html += `<button class="filter-btn ${currentFilter === catKey ? 'active' : ''}" data-category="${catKey}">${c.nombre}</button>`;
+                }
+            });
+            categoryFilters.innerHTML = html;
+        }
     } catch (error) {
         console.error('Error loading menu:', error);
         menuGrid.innerHTML = `<p>Error al cargar el menú. Por favor, intenta de nuevo más tarde.</p>`;
