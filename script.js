@@ -596,6 +596,8 @@ function renderMenu() {
     const paginatedItems = filtered.slice(start, end);
 
     menuGrid.innerHTML = paginatedItems.map(item => {
+        let isBebida = item.category === 'bebidas';
+
         let priceHTML = '';
         if (item.disponible === false) {
             priceHTML = `
@@ -618,22 +620,43 @@ function renderMenu() {
                 </div>
             `;
         } else {
-            priceHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="price-tag">♨️ ${item.price_caliente.toFixed(2)}€</div>
-                    <button class="order-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
-                </div>
-            `;
+            if (isBebida) {
+                priceHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="price-tag" style="color: #00d2ff; border-color: #00d2ff; text-shadow: 0 0 5px rgba(0,210,255,0.5);">❄️ ${item.price_caliente.toFixed(2)}€</div>
+                        <button class="order-btn" style="width: auto; padding: 10px 20px; margin: 0; border-color: #00d2ff; color: #00d2ff; box-shadow: 0 0 10px rgba(0,210,255,0.2);" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
+                    </div>
+                `;
+            } else {
+                priceHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="price-tag">♨️ ${item.price_caliente.toFixed(2)}€</div>
+                        <button class="order-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="addToCart(event, '${item.type}', ${item.id}, 'caliente')">Añadir</button>
+                    </div>
+                `;
+            }
         }
 
         const imageHTML = item.image ? `<img src="${item.image}" class="bocadillo-img" alt="${item.name}">` : '';
         const colorClass = (!item.price_frio) ? 'caliente-solo' : '';
 
+        let iconHtml = '';
+        if (isBebida) {
+            let lowerName = item.name.toLowerCase();
+            if (lowerName.includes('zumo')) {
+                iconHtml = '<span style="font-size: 1.4rem; vertical-align: middle; margin-right: 6px;" title="Zumo">🧃</span>';
+            } else if (lowerName.includes('lata')) {
+                iconHtml = '<span style="font-size: 1.4rem; vertical-align: middle; margin-right: 6px;" title="Lata">🥫</span>';
+            } else if (lowerName.includes('botella')) {
+                iconHtml = '<span style="font-size: 2rem; vertical-align: middle; margin-right: 6px;" title="Botella">🧴</span>';
+            }
+        }
+
         return `
             <div class="bocadillo-card ${item.disponible === false ? 'agotado' : ''} ${colorClass}" data-id="${item.id}" data-type="${item.type}">
                 <div class="bocadillo-number">${item.number || ''}</div>
-                <h3>${item.name}</h3>
-                <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : 'Complemento'}</p>
+                <h3>${iconHtml}${item.name}</h3>
+                <p>${item.type === 'bocadillo' ? `Bocadillo de ${item.ingredients} ingredientes` : (isBebida ? 'Bebida bien fría' : 'Complemento')}</p>
                 ${priceHTML}
                 ${imageHTML}
             </div>
