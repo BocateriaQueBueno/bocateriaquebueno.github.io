@@ -1116,7 +1116,8 @@ function setupAuth() {
                 email,
                 password,
                 options: {
-                    data: { full_name: name, phone: phone }
+                    data: { full_name: name, phone: phone },
+                    emailRedirectTo: window.location.origin + '/index.html'
                 }
             });
 
