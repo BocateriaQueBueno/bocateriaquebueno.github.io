@@ -33,6 +33,36 @@ let allProductos = [];
 let allPromociones = [];
 let allCategorias = [];
 let pedidosInterval = null;
+let lastKnownOrderId = parseInt(localStorage.getItem('admin_last_order_id') || '0', 10);
+let audioCtx = null;
+
+function getAudioContext() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+
+function playNewOrderSound() {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        // Triple bip ascendente (do - mi - sol)
+        [0, 0.18, 0.36].forEach((offset, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime([520, 660, 780][i], now + offset);
+            gain.gain.setValueAtTime(0, now + offset);
+            gain.gain.linearRampToValueAtTime(0.5, now + offset + 0.04);
+            gain.gain.linearRampToValueAtTime(0, now + offset + 0.14);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.15);
+        });
+    } catch (e) {
+        console.warn('No se pudo reproducir el sonido de alerta:', e);
+    }
+}
 
 async function checkAdmin() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -535,6 +565,22 @@ async function loadPedidos() {
     if (error) {
         console.error('Error loading pedidos', error);
         return;
+    }
+
+    // Detección de pedidos nuevos y alerta sonora
+    if (data && data.length > 0) {
+        const maxId = Math.max(...data.map(p => p.id_pedido));
+        if (lastKnownOrderId === 0) {
+            // Primera carga: establecer referencia sin sonar
+            lastKnownOrderId = maxId;
+            localStorage.setItem('admin_last_order_id', maxId);
+        } else if (maxId > lastKnownOrderId) {
+            const nuevos = data.filter(p => p.id_pedido > lastKnownOrderId).length;
+            lastKnownOrderId = maxId;
+            localStorage.setItem('admin_last_order_id', maxId);
+            playNewOrderSound();
+            showToast(`🔔 ¡${nuevos} nuevo${nuevos > 1 ? 's pedidos' : ' pedido'} recibido${nuevos > 1 ? 's' : ''}!`, 'success');
+        }
     }
     
     const list = document.getElementById('admin-pedidos-list');

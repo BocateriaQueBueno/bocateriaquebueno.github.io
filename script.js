@@ -75,8 +75,7 @@ cart = cart.map(item => ({
     ...item,
     selectedExtras: item.selectedExtras || [],
     basePrice: item.basePrice || item.price || 0,
-    price: item.price || 0,
-    pan_obrador: item.pan_obrador || false
+    price: item.price || 0
 }));
 
 // DOM Elements
@@ -701,6 +700,13 @@ window.goToPage = function (page) {
 
 // Cart Logic
 window.addToCart = function (event, type, id, temp = 'caliente') {
+    if (!currentUser) {
+        showToast('Debes iniciar sesión o registrarte para poder pedir. ¡Es rápido y gratis!', 'error');
+        const authModal = document.getElementById('auth-modal');
+        if (authModal) authModal.style.display = 'flex';
+        return;
+    }
+
     if (!isShopOpen()) {
         showToast('Lo sentimos, el establecimiento está cerrado en este momento.\\nPor favor, revisa nuestros horarios.', 'error');
         return;
@@ -721,7 +727,6 @@ window.addToCart = function (event, type, id, temp = 'caliente') {
             price: price,
             temp: temp,
             quantity: 1,
-            pan_obrador: false,
             selectedExtras: [] // Array para guardar los extras específicos
         });
     }
@@ -746,13 +751,7 @@ window.removeFromCart = function (index) {
     updateCartUI();
 };
 
-window.togglePanObrador = function (index) {
-    const item = cart[index];
-    item.pan_obrador = !item.pan_obrador;
-    recalculateItemPrice(index);
-    saveCart();
-    updateCartUI();
-};
+
 
 window.addExtraToItem = function (itemIndex, extraId) {
     if (!extraId) return;
@@ -784,8 +783,6 @@ window.removeExtraFromItem = function (itemIndex, extraIndex) {
 function recalculateItemPrice(index) {
     const item = cart[index];
     let extraTotal = 0;
-
-    if (item.pan_obrador) extraTotal += EXTRAS.pan_obrador.price;
 
     item.selectedExtras.forEach(e => {
         extraTotal += e.price;
@@ -837,11 +834,6 @@ function updateCartUI() {
                 extrasHTML = `
                     <div style="margin-top: 8px;">
                         <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                            <label style="font-size: 0.75rem; background: ${item.pan_obrador ? 'var(--accent)' : 'rgba(255,255,255,0.05)'}; color: ${item.pan_obrador ? '#000' : '#fff'}; padding: 4px 8px; border-radius: 4px; cursor: pointer; border: 1px solid ${item.pan_obrador ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}; display: inline-flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" style="display: none;" onchange="togglePanObrador(${index})" ${item.pan_obrador ? 'checked' : ''}>
-                                🥖 Pan Obrador (+0.30€)
-                            </label>
-                            
                             <select onchange="addExtraToItem(${index}, this.value); this.value='';" style="font-size: 0.75rem; padding: 6px; border-radius: 4px; border: 1px solid var(--secondary); background: #000; color: #fff; cursor: pointer; max-width: 160px;">
                                 <option value="" style="background: #000;">+ Añadir Extra...</option>
                                 <optgroup label="SALSAS (0.60€)" style="background: #111; color: var(--secondary);">
@@ -911,6 +903,14 @@ window.onclick = (e) => {
 if (checkoutBtn) {
     checkoutBtn.onclick = async () => {
         if (cart.length === 0) return showToast('El carrito está vacío', 'error');
+
+        if (!currentUser) {
+            showToast('Debes iniciar sesión o registrarte para confirmar tu pedido.', 'error');
+            cartModal.style.display = 'none';
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) authModal.style.display = 'flex';
+            return;
+        }
 
         const pickupTime = document.getElementById('pickup-time').value;
         if (!pickupTime) {
@@ -984,7 +984,6 @@ if (checkoutBtn) {
                 if (item.type === 'bocadillo') {
                     linea.id_bocadillo = item.id;
                     linea.temperatura = item.temp;
-                    linea.pan_obrador = item.pan_obrador || false;
                     // Guardamos los nombres de los extras seleccionados en el campo notas o similar si es necesario
                     // Por ahora, el precio ya está sumado en precio_unitario
                     if (item.selectedExtras && item.selectedExtras.length > 0) {
